@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import * as fabric from 'fabric';
 import { createDeleteControl, applyStickerSettings } from '../utils/fabric-utils';
 
-const DesignCanvas = ({ onCanvasReady, selectedShirt, initialDesign }) => {
+const DesignCanvas = ({ onCanvasReady, initialDesign }) => {
   const canvasRef = useRef(null);
   const [fabricCanvas, setFabricCanvas] = useState(null);
   const isInitRef = useRef(false);
@@ -16,6 +16,43 @@ const DesignCanvas = ({ onCanvasReady, selectedShirt, initialDesign }) => {
 
   const CM_TO_PX = 10; 
   const SHIRT_WIDTH_CM = 55; // Natural width for relative scaling
+
+  const lockBackground = (obj) => {
+      obj.set({
+          selectable: false,
+          evented: false,
+          lockMovementX: true,
+          lockMovementY: true,
+          lockRotation: true,
+          lockScalingX: true,
+          lockScalingY: true,
+          isBackground: true,
+          hoverCursor: 'default'
+      });
+  };
+
+  const addBackground = (canvas, imgSrc) => {
+      // Clear any potential leftover backgrounds first
+      const existing = canvas.getObjects().filter(o => o.isBackground);
+      existing.forEach(o => canvas.remove(o));
+
+      return fabric.Image.fromURL(imgSrc, { crossOrigin: 'anonymous' }).then((img) => {
+          // Use natural aspect ratio based on a fixed width (1cm = 10px)
+          img.scaleToWidth(SHIRT_WIDTH_CM * CM_TO_PX);
+          
+          img.set({
+              left: canvas.width / 2, 
+              top: canvas.height / 2, 
+              originX: 'center', 
+              originY: 'center' 
+          });
+          lockBackground(img);
+          canvas.add(img);
+          canvas.sendObjectToBack(img);
+          canvas.requestRenderAll();
+          return img;
+      });
+  };
 
   // 1. Initialize Canvas & Load Logic
   useEffect(() => {
@@ -105,43 +142,6 @@ const DesignCanvas = ({ onCanvasReady, selectedShirt, initialDesign }) => {
        }
     }
   }, [currentShirt, fabricCanvas]); 
-
-  const lockBackground = (obj) => {
-      obj.set({
-          selectable: false,
-          evented: false,
-          lockMovementX: true,
-          lockMovementY: true,
-          lockRotation: true,
-          lockScalingX: true,
-          lockScalingY: true,
-          isBackground: true,
-          hoverCursor: 'default'
-      });
-  };
-
-  const addBackground = (canvas, imgSrc) => {
-      // Clear any potential leftover backgrounds first
-      const existing = canvas.getObjects().filter(o => o.isBackground);
-      existing.forEach(o => canvas.remove(o));
-
-      return fabric.Image.fromURL(imgSrc, { crossOrigin: 'anonymous' }).then((img) => {
-          // Use natural aspect ratio based on a fixed width (1cm = 10px)
-          img.scaleToWidth(SHIRT_WIDTH_CM * CM_TO_PX);
-          
-          img.set({
-              left: canvas.width / 2, 
-              top: canvas.height / 2, 
-              originX: 'center', 
-              originY: 'center' 
-          });
-          lockBackground(img);
-          canvas.add(img);
-          canvas.sendObjectToBack(img);
-          canvas.requestRenderAll();
-          return img;
-      });
-  };
 
   return (
     <div className="flex justify-center items-center bg-transparent p-2 border-4 border-u-orange rounded-[32px] shadow-2xl overflow-hidden max-w-full">

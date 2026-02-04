@@ -20,26 +20,6 @@ const HumanInput = ({
   const canvasRef = useRef(null);
   const countdownInterval = useRef(null);
 
-  useEffect(() => {
-    startCamera();
-    return () => stopCamera();
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-    if (showCamera && stream && videoRef.current) {
-      const video = videoRef.current;
-      video.srcObject = stream;
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-          playPromise.catch(e => {
-              if (isMounted) console.error("Error playing video:", e);
-          });
-      }
-    }
-    return () => { isMounted = false; };
-  }, [showCamera, stream]);
-
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
@@ -61,31 +41,6 @@ const HumanInput = ({
     setShowCamera(false);
     setCountdown(null);
     if (countdownInterval.current) clearInterval(countdownInterval.current);
-  };
-
-  const startCountdown = () => {
-    if (timer === 0) {
-        triggerCapture();
-        return;
-    }
-    
-    setCountdown(timer);
-    countdownInterval.current = setInterval(() => {
-        setCountdown(prev => {
-            if (prev <= 1) {
-                clearInterval(countdownInterval.current);
-                triggerCapture();
-                return null;
-            }
-            return prev - 1;
-        });
-    }, 1000);
-  };
-
-  const triggerCapture = () => {
-      setFlash(true);
-      setTimeout(() => setFlash(false), 400);
-      capturePhoto();
   };
 
   const capturePhoto = () => {
@@ -149,6 +104,51 @@ const HumanInput = ({
       }
     }
   };
+
+  const triggerCapture = () => {
+      setFlash(true);
+      setTimeout(() => setFlash(false), 400);
+      capturePhoto();
+  };
+
+  const startCountdown = () => {
+    if (timer === 0) {
+        triggerCapture();
+        return;
+    }
+    
+    setCountdown(timer);
+    countdownInterval.current = setInterval(() => {
+        setCountdown(prev => {
+            if (prev <= 1) {
+                clearInterval(countdownInterval.current);
+                triggerCapture();
+                return null;
+            }
+            return prev - 1;
+        });
+    }, 1000);
+  };
+
+  useEffect(() => {
+    startCamera();
+    return () => stopCamera();
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (showCamera && stream && videoRef.current) {
+      const video = videoRef.current;
+      video.srcObject = stream;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+          playPromise.catch(e => {
+              if (isMounted) console.error("Error playing video:", e);
+          });
+      }
+    }
+    return () => { isMounted = false; };
+  }, [showCamera, stream]);
 
   if (capturedImage) {
       return (

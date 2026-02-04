@@ -271,9 +271,6 @@ const BarberKioskPage = () => {
                         </div>
                         <div className='space-y-4'>
                             <h3 className='text-2xl md:text-4xl font-black tracking-tighter uppercase italic text-tech-black'>{LOADING_MESSAGES[loadingMsgIdx]}</h3>
-                            <div className="inline-flex items-center gap-3 px-6 py-2 bg-u-orange text-white rounded-pill font-black uppercase tracking-widest text-[10px] shadow-lg shadow-u-orange/20">
-                                <Zap size={12} fill="currentColor" /> Neural Rendering via Ultra5G
-                            </div>
                         </div>
                     </div>
                 ) : error ? (
