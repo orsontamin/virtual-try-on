@@ -1,0 +1,105 @@
+/**
+ * MASTER BRIDGE: GOOGLE GEMINI AI + VTO PREDICTION + DRIVE STORAGE
+ * 
+ * INSTRUCTIONS:
+ * 1. Go to https://script.google.com
+ * 2. Create a New Project.
+ * 3. Replace all code with the content below.
+ * 4. Click 'Deploy' > 'New Deployment'.
+ * 5. Select 'Web App'.
+ * 6. Set 'Execute As' to 'Me'.
+ * 7. Set 'Who has access' to 'Anyone'.
+ * 8. Click 'Deploy' and Authorize all permissions (Drive, External Requests, etc.).
+ * 9. Copy the Web App URL to your VITE_GOOGLE_BRIDGE_URL in .env.local.
+ */
+
+function doPost(e) {
+  var data;
+  try {
+    data = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ error: "Invalid JSON input" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  var action = data.action; // 'gemini', 'vto', or 'upload'
+
+  if (action === 'gemini') {
+    return handleGemini(data.payload);
+  } else if (action === 'vto') {
+    return handleVTO(data.payload);
+  } else if (action === 'upload') {
+    return handleUpload(data.base64, data.filename);
+  } else {
+    return ContentService.createTextOutput(JSON.stringify({ error: "Unknown action: " + action }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function handleGemini(payload) {
+  var PROJECT_ID = "premium-carving-481411-d2";
+  var LOCATION_ID = "us-central1";
+  var MODEL_ID = "gemini-2.5-flash"; 
+  var url = "https://" + LOCATION_ID + "-aiplatform.googleapis.com/v1/projects/" + PROJECT_ID + "/locations/" + LOCATION_ID + "/publishers/google/models/" + MODEL_ID + ":generateContent";
+  
+  return proxyVertex(url, payload);
+}
+
+function handleVTO(payload) {
+  var PROJECT_ID = "premium-carving-481411-d2";
+  var LOCATION_ID = "asia-southeast1";
+  var MODEL_ID = "virtual-try-on-001";
+  var url = "https://" + LOCATION_ID + "-aiplatform.googleapis.com/v1/projects/" + PROJECT_ID + "/locations/" + LOCATION_ID + "/publishers/google/models/" + MODEL_ID + ":predict";
+  
+  return proxyVertex(url, payload);
+}
+
+function proxyVertex(url, payload) {
+  try {
+    var options = {
+      method: "post",
+      contentType: "application/json",
+      payload: JSON.stringify(payload),
+      headers: {
+        Authorization: "Bearer " + ScriptApp.getOAuthToken()
+      },
+      muteHttpExceptions: true
+    };
+    
+    var response = UrlFetchApp.fetch(url, options);
+    return ContentService.createTextOutput(response.getContentText())
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ 
+      error: { message: err.message } 
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function handleUpload(base64, filename) {
+  try {
+    var folderName = "VTO_KIOSK_UPLOADS";
+    var folders = DriveApp.getFoldersByName(folderName);
+    var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+    
+    var contentType = base64.substring(base64.indexOf(":") + 1, base64.indexOf(";"));
+    var bytes = Utilities.base64Decode(base64.split(",")[1]);
+    var blob = Utilities.newBlob(bytes, contentType, filename);
+    var file = folder.createFile(blob);
+    
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      id: file.getId(),
+      url: "https://drive.google.com/file/d/" + file.getId() + "/view",
+      success: true
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ 
+      success: false, 
+      error: err.message 
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}

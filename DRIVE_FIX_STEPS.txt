@@ -1,0 +1,24 @@
+⚠️ FIX FOR DRIVE PERMISSION ERROR
+
+Your Google Apps Script has the code, but Google needs you to manually "Approve" the new Drive access once.
+
+STEP 1: Trigger the Authorization Popup
+1. Open your project at https://script.google.com
+2. In the 'Code.gs' file, scroll down to the bottom.
+3. Paste this temporary function:
+   function triggerAuth() { DriveApp.getRootFolder(); }
+4. In the top toolbar, select 'triggerAuth' from the dropdown.
+5. Click the 'Run' button.
+6. A popup will appear: "Authorization Required".
+7. Click 'Review Permissions'.
+8. Select your Google Account.
+9. Click 'Advanced' > 'Go to [Project Name] (unsafe)'.
+10. Click 'Allow'.
+
+STEP 2: Update the Web App
+1. After Step 1 finishes, click 'Deploy' > 'Manage Deployments'.
+2. Click the 'Pencil' icon (Edit).
+3. Select 'New Version'.
+4. Click 'Deploy'.
+
+The "Cloud Sync Failed" error will disappear immediately after these steps!

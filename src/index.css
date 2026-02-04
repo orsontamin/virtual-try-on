@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --color-u-orange: #ff7b00;
+  --color-tech-black: #343741;
+  --color-deep-blue: #00538B;
+  --color-soft-white: #F5F5F7;
+  
+  --radius-pill: 9999px;
+
+  --color-pastel-lavender: #e8e8ff;
+  --color-pastel-mint: #e0fff4;
+  --color-pastel-peach: #fff0e0;
+  --color-pastel-pink: #ffe0f0;
+  --color-brand-purple: #7c3aed;
+  
+  --animate-scan: scan 2s linear infinite;
+  --animate-float: float 3s ease-in-out infinite;
+
+  @keyframes scan {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes flash {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+}
+
+.animate-flash {
+  animation: flash 0.4s ease-out;
+}
+
+body {
+  @apply bg-soft-white text-tech-black selection:bg-u-orange/20 relative;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.branded-bg {
+  background-color: #F5F5F7;
+  /* Use a semi-transparent white overlay to wash out the repeating logo */
+  background-image: 
+    linear-gradient(rgba(245, 245, 247, 0.92), rgba(245, 245, 247, 0.92)), 
+    url('/assets/logo/umobile-logo.png');
+  background-repeat: repeat;
+  background-size: 18rem;
+  background-attachment: fixed;
+  background-position: center;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+.glass {
+  @apply bg-white/70 backdrop-blur-md border border-white/20;
+}
