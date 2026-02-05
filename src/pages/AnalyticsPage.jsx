@@ -34,19 +34,8 @@ const AnalyticsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="p-8 h-full">
       <div className="max-w-4xl mx-auto">
-        <header className="mb-8 flex items-center justify-between">
-            <div>
-                <Link to="/" className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition mb-2">
-                    <ArrowLeft size={20} /> Back to Wizard
-                </Link>
-                <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-                    <BarChart3 className="text-blue-600" size={32} /> Project Analytics
-                </h1>
-            </div>
-        </header>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {/* Metric Cards */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">

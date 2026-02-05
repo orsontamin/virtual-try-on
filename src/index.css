@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-u-orange: #ff7b00;
+  --color-u-orange: #F47321;
   --color-tech-black: #343741;
   --color-deep-blue: #00538B;
   --color-soft-white: #F5F5F7;
@@ -40,28 +40,68 @@
   animation: flash 0.4s ease-out;
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Forcefully prevent all scrolling */
+  position: fixed;
+}
+
 body {
-  @apply bg-soft-white text-tech-black selection:bg-u-orange/20 relative;
+  @apply bg-[#F47321] text-tech-black selection:bg-u-orange/20;
   font-family: 'Inter', system-ui, sans-serif;
 }
 
 .branded-bg {
-  background-color: #F5F5F7;
-  /* Use a semi-transparent white overlay to wash out the repeating logo */
-  background-image: 
-    linear-gradient(rgba(245, 245, 247, 0.92), rgba(245, 245, 247, 0.92)), 
-    url('/assets/logo/umobile-logo.png');
-  background-repeat: repeat;
-  background-size: 18rem;
-  background-attachment: fixed;
+  background-color: #F47321;
+}
+
+.screen-container {
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-image: url('/assets/screen/screen-all-interface.png');
+  background-size: 100% 100%; /* Forcefully stretch to fill */
+  background-repeat: no-repeat;
   background-position: center;
+  overflow: hidden;
+  background-color: #F47321;
 }
 
-#root {
-  position: relative;
-  z-index: 1;
+.screen-content {
+  position: absolute;
+  /* Increased safety margins to prevent touching the frame borders */
+  top: 14%; 
+  left: 8%;
+  right: 8%;
+  bottom: 10%;
+  overflow: hidden; /* As requested: cannot be scrollable */
+  display: flex;
+  flex-direction: column;
+}
+/* Hide scrollbar but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
-.glass {
-  @apply bg-white/70 backdrop-blur-md border border-white/20;
+/* Base styles for layout components */
+header {
+  flex-shrink: 0;
+}
+
+main {
+  flex-grow: 1;
+  min-height: 0;
 }

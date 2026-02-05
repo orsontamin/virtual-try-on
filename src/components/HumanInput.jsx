@@ -7,7 +7,8 @@ const HumanInput = ({
   compact = false,
   instruction = "Ensure your entire body from head to waist is visible in the frame",
   zoom = 1.0,
-  maxDim = 1024
+  maxDim = 1024,
+  actionLabel = "TRY ON"
 }) => {
   const [showCamera, setShowCamera] = useState(false);
   const [stream, setStream] = useState(null);
@@ -19,6 +20,7 @@ const HumanInput = ({
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const countdownInterval = useRef(null);
+  const streamRef = useRef(null);
 
   const startCamera = async () => {
     try {
@@ -26,6 +28,7 @@ const HumanInput = ({
         video: { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false 
       });
+      streamRef.current = mediaStream;
       setStream(mediaStream);
       setShowCamera(true);
     } catch (err) {
@@ -34,10 +37,11 @@ const HumanInput = ({
   };
 
   const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
+    setStream(null);
     setShowCamera(false);
     setCountdown(null);
     if (countdownInterval.current) clearInterval(countdownInterval.current);
@@ -98,10 +102,7 @@ const HumanInput = ({
       const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
       setCapturedImage(dataUrl);
       
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        setStream(null);
-      }
+      stopCamera();
     }
   };
 
@@ -131,7 +132,7 @@ const HumanInput = ({
   };
 
   useEffect(() => {
-    startCamera();
+    // startCamera(); // REMOVED: User must manually open camera
     return () => stopCamera();
   }, []);
 
@@ -191,7 +192,7 @@ const HumanInput = ({
                     onClick={() => onImageSelect(capturedImage)}
                     className="flex-[2] py-6 bg-u-orange text-white rounded-pill font-black uppercase tracking-tighter shadow-[0_20px_40px_rgba(215,63,9,0.25)] hover:bg-tech-black transition-all active:scale-95 flex items-center justify-center gap-4 text-lg italic"
                 >
-                    STITCH IT <Zap size={24} fill="white" />
+                    {actionLabel} <Zap size={24} fill="white" />
                 </button>
             </div>
         </div>

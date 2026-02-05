@@ -6,6 +6,7 @@ import { analyzeAndConsult, getStoredBarberPrompt, setStoredBarberPrompt } from 
 import { saveToHistory } from '../services/history';
 import { saveImageToDrive } from '../services/google-drive';
 import { getAccessToken as refreshGoogleToken } from '../services/auth';
+import { applyFrame } from '../utils/image-utils';
 
 const LOADING_MESSAGES = [
     'Analyzing facial geometry...',
@@ -118,6 +119,11 @@ const BarberKioskPage = () => {
               setProcessDuration(duration);
               
               setResult(data);
+              
+              // Apply Frame to the result
+              const framedImage = await applyFrame(data.image, '/assets/screen/screen-grooming-frame.png');
+              data.image = framedImage; // Update data.image with framed version
+              
               saveToHistory(data.image);
               
               saveImageToDrive(data.image, `barber-collage-${Date.now()}.png`).then(driveData => {
@@ -136,123 +142,32 @@ const BarberKioskPage = () => {
   };
 
   return (
-    <div className='min-h-screen branded-bg flex flex-col font-sans selection:bg-u-orange/20'>
-      {/* Dynamic Header */}
-      <header className={`bg-tech-black text-white p-5 border-b-4 border-u-orange z-50 shadow-xl`}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <div className="flex items-center gap-5">
-                <button 
-                    onClick={() => navigate('/')}
-                    className='p-3 bg-white/10 rounded-pill hover:bg-u-orange transition-all border border-white/20 active:scale-95'
-                >
-                    <ArrowLeft size={20} />
-                </button>
-                <div className="flex items-center gap-4">
-                    <img src="/assets/logo/umobile-logo.png" alt="U Mobile Logo" className="h-10 w-auto object-contain" />
-                    <div className="flex flex-col">
-                        <h1 className="text-2xl font-black tracking-tight uppercase leading-none italic">
-                            AI <span className="text-u-orange">GROOMING</span>
-                        </h1>
-                        <span className="text-[10px] font-black text-u-orange/80 tracking-[0.2em] uppercase">CARA U Sabah Ultra5G Fest</span>
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-                <div className="flex gap-2">
-                    <button 
-                        onClick={() => setShowSettings(true)}
-                        className='p-3 bg-white/10 border border-white/20 rounded-pill text-white hover:bg-u-orange transition shadow-sm active:scale-95'
-                        title="Edit AI Instructions"
-                    >
-                        <Settings size={20} />
-                    </button>
-                </div>
-            </div>
-        </div>
-      </header>
-
-      {/* Settings Modal */}
-      {showSettings && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-              <div className="absolute inset-0 bg-tech-black/60 backdrop-blur-md" onClick={() => setShowSettings(false)}></div>
-              <div className="relative w-full max-w-4xl bg-white rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border-2 border-tech-black/5">
-                  <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-soft-white/30">
-                      <div>
-                          <h3 className="text-2xl font-black text-tech-black uppercase tracking-tighter italic">AI Master Groomer Instructions</h3>
-                          <p className="text-xs text-tech-black/40 font-bold uppercase tracking-widest">Customize how the AI analyzes and styles hair</p>
-                      </div>
-                      <button onClick={() => setShowSettings(false)} className="p-4 hover:bg-soft-white rounded-pill transition">
-                          <X size={24} className="text-tech-black/40" />
-                      </button>
-                  </div>
-                  
-                  <div className="flex-1 p-8 overflow-y-auto">
-                      <textarea 
-                          value={tempPrompt}
-                          onChange={(e) => setTempPrompt(e.target.value)}
-                          className="w-full h-[400px] p-6 rounded-[32px] border-2 border-tech-black/10 focus:border-u-orange focus:ring-4 focus:ring-u-orange/10 transition-all font-mono text-sm leading-relaxed text-tech-black bg-soft-white/20"
-                          placeholder="Enter AI instructions here..."
-                      />
-                  </div>
-
-                  <div className="p-8 border-t border-slate-100 flex flex-wrap gap-4 bg-soft-white/30">
-                      <div className="flex gap-2 mr-auto">
-                          <button 
-                              onClick={handleExportJSON}
-                              className="px-6 py-4 bg-white border border-tech-black/10 text-tech-black/60 rounded-pill font-black uppercase text-xs hover:bg-white hover:border-u-orange transition flex items-center gap-2"
-                          >
-                              <FileDown size={18} /> Export
-                          </button>
-                          <label className="px-6 py-4 bg-white border border-tech-black/10 text-tech-black/60 rounded-pill font-black uppercase text-xs hover:bg-white hover:border-u-orange transition flex items-center gap-2 cursor-pointer">
-                              <FileUp size={18} /> Import
-                              <input type="file" accept=".json" onChange={handleImportJSON} className="hidden" />
-                          </label>
-                      </div>
-                      
-                      <button 
-                          onClick={handleResetPrompt}
-                          className="px-8 py-4 bg-white border border-tech-black/10 text-tech-black/30 rounded-pill font-black uppercase text-xs hover:bg-soft-white transition flex items-center gap-2"
-                      >
-                          <ResetIcon size={18} /> Reset Defaults
-                      </button>
-                      <button 
-                          onClick={handleSavePrompt}
-                          className="flex-1 py-4 bg-u-orange text-white rounded-pill font-black uppercase tracking-widest hover:bg-tech-black transition shadow-xl flex items-center justify-center gap-3"
-                      >
-                          <Save size={20} /> Save Changes
-                      </button>
-                  </div>
-              </div>
-          </div>
-      )}
-
+    <div className='flex flex-col font-sans selection:bg-u-orange/20 h-full'>
       <main className='flex-grow flex flex-col items-center justify-center p-4 md:p-8'>
         
         {step === 1 && (
-            <div className={`w-full min-h-full flex flex-col items-center ${isPortraitMode ? 'justify-between py-12 px-6' : 'max-w-4xl text-center justify-center'}`}>
-                <div className='text-center mb-16 space-y-4'>
-                    <h2 className={`font-black tracking-tighter leading-tight text-tech-black italic uppercase ${isPortraitMode ? 'text-6xl' : 'text-6xl md:text-8xl'}`}>
-                        TAKE YOUR <span className="text-u-orange">SEAT.</span>
+            <div className="w-full h-full flex flex-col items-center justify-center py-4 px-6">
+                <div className='text-center mb-8 space-y-2'>
+                    <h2 className="font-black tracking-tighter leading-tight text-tech-black italic uppercase text-5xl md:text-6xl">
+                        TAKE YOUR SEAT.
                     </h2>
-                    <p className='text-tech-black/40 font-black uppercase tracking-[0.5em] text-xs'>Premium Hairstyle Transformation</p>
+                    <p className='text-tech-black/40 font-black uppercase tracking-[0.5em] text-[10px]'>Premium Hairstyle Transformation</p>
                 </div>
                 
-                <div className={`w-full relative flex items-center justify-center p-4 ${isPortraitMode ? 'flex-1' : ''}`}>
-                    <div className="relative p-2 bg-white rounded-[60px] shadow-2xl border-4 border-u-orange/10 w-full max-w-lg">
-                        <HumanInput 
-                            onImageSelect={handleCapture} 
-                            compact={isPortraitMode}
-                            instruction="Ensure your face is clearly visible in the center of the frame"
-                            zoom={0.8}
-                            maxDim={768}
-                        />
-                    </div>
+                <div className="relative p-2 bg-white rounded-[48px] shadow-2xl border-4 border-u-orange/10 w-full max-w-lg mb-8">
+                    <HumanInput 
+                        onImageSelect={handleCapture} 
+                        compact={true}
+                        instruction="Ensure your face is clearly visible in the center of the frame"
+                        zoom={0.8}
+                        maxDim={768}
+                        actionLabel="STYLE NOW"
+                    />
                 </div>
 
-                <div className="pb-12">
-                    <button onClick={() => navigate('/')} className="px-12 py-5 bg-u-orange text-white rounded-pill font-black hover:bg-tech-black transition-all active:scale-95 flex items-center gap-4 uppercase text-lg tracking-tighter shadow-xl">
-                        <ArrowLeft size={24} /> Back
+                <div className="pb-4">
+                    <button onClick={() => navigate('/')} className="px-10 py-4 bg-tech-black text-white rounded-pill font-black hover:bg-u-orange transition-all active:scale-95 flex items-center gap-3 uppercase text-base tracking-tighter shadow-xl">
+                        <ArrowLeft size={20} /> Back
                     </button>
                 </div>
             </div>
@@ -266,7 +181,7 @@ const BarberKioskPage = () => {
                             <div className="absolute -inset-8 bg-u-orange/20 rounded-full blur-2xl animate-pulse"></div>
                             <div className='relative w-32 h-32 flex items-center justify-center'>
                                 <div className='absolute inset-0 border-t-4 border-u-orange rounded-full animate-spin'></div>
-                                <RefreshCw size={40} className='text-u-orange animate-spin' />
+                                <RefreshCw size={40} className='text-tech-black animate-spin' />
                             </div>
                         </div>
                         <div className='space-y-4'>
@@ -289,10 +204,6 @@ const BarberKioskPage = () => {
                         <div className='w-full flex-1 flex flex-col md:flex-row gap-6 md:gap-10 min-h-0 items-start overflow-y-auto md:overflow-hidden px-4 md:px-0'>
                             {/* Left Col: Info & Original (Small) */}
                             <div className='w-full md:w-[200px] flex flex-row md:flex-col gap-4 min-h-0 items-center md:items-start'>
-                                <div className="space-y-1">
-                                    <h2 className="text-lg md:text-xl font-black text-tech-black tracking-tighter uppercase italic whitespace-nowrap">Original</h2>
-                                </div>
-                                
                                 <div className='w-24 md:w-full relative rounded-[20px] overflow-hidden shadow-[0_20px_50px_rgba(52,55,65,0.1)] border-4 border-white bg-white aspect-[3/4]'>
                                     <img src={originalImage} alt='Original' className='w-full h-full object-cover' />
                                 </div>
@@ -301,16 +212,13 @@ const BarberKioskPage = () => {
                             {/* Right Col: Result (Dominant) */}
                             <div className='flex-1 w-full flex flex-col gap-4 min-h-0'>
                                 <div className="space-y-1">
-                                    <h2 className="text-2xl md:text-4xl font-black text-tech-black tracking-tighter uppercase italic leading-none">THE <span className="text-u-orange">TRANSFORMATION.</span></h2>
-                                    <p className="text-[10px] text-tech-black/40 font-black uppercase tracking-[0.4em]">AI Style Variations // Ultra5G Render</p>
+                                    <h2 className="text-2xl md:text-4xl font-black text-tech-black tracking-tighter uppercase italic leading-none">THE TRANSFORMATION.</h2>
+                                    <p className="text-[10px] text-tech-black/40 font-black uppercase tracking-[0.4em]">AI Style Variations</p>
                                 </div>
 
                                 <div className='flex-1 relative group rounded-[32px] md:rounded-[60px] overflow-hidden shadow-[0_40px_100px_rgba(52,55,65,0.15)] border-8 md:border-[16px] border-white bg-white min-h-[350px] md:min-h-0'>
                                     <div className="absolute -inset-12 bg-u-orange/5 blur-[100px] opacity-50 pointer-events-none animate-pulse"></div>
                                     <img src={result?.image} alt='Result' className='w-full h-full object-contain relative z-10' />
-                                    <div className='absolute top-4 left-4 md:top-8 md:left-8 bg-u-orange text-white px-4 py-2 md:px-6 md:py-3 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] rounded-pill shadow-2xl flex items-center gap-2 md:gap-3 z-20'>
-                                        <Zap size={12} fill="white" /> Result
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -329,18 +237,13 @@ const BarberKioskPage = () => {
                                             />
                                         ) : (
                                             <div className="flex flex-col items-center gap-3 text-tech-black/20">
-                                                <RefreshCw size={24} md:size={32} className="animate-spin text-u-orange" />
+                                                <RefreshCw size={24} md:size={32} className="animate-spin text-tech-black" />
                                                 <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest italic">Syncing...</span>
                                             </div>
                                         )}
                                     </div>
                                     <div className="space-y-2 text-center md:text-left">
-                                        <h3 className='text-3xl md:text-5xl font-black text-tech-black uppercase tracking-tighter italic leading-none'>GET YOUR LOOK</h3>
-                                        <p className='text-[10px] md:text-sm font-black text-u-orange uppercase tracking-[0.2em]'>Scan to sync with your device instantly</p>
-                                        
-                                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-deep-blue text-white rounded-pill text-[10px] font-black uppercase tracking-widest mt-4 shadow-lg">
-                                            <Wifi size={12} className="animate-pulse" /> Ultra5G Secure Sync
-                                        </div>
+                                        <h3 className='text-xl md:text-3xl font-black text-tech-black uppercase tracking-tighter italic leading-none'>SCAN TO DOWNLOAD YOUR LOOK</h3>
                                     </div>
                                 </div>
                             </div>
@@ -364,13 +267,6 @@ const BarberKioskPage = () => {
         )}
 
       </main>
-
-      {/* Mini Footer */}
-      <div className="bg-tech-black py-3 flex justify-center items-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/20">
-              Powered by EventzFlow 2026
-          </p>
-      </div>
     </div>
   );
 };

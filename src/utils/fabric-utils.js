@@ -48,3 +48,49 @@ export const applyStickerSettings = (obj, deleteControl) => {
         mtr: false
     });
 };
+
+export const generateDesignImage = async (stickersJson, backgroundSrc, width = 625, height = 750) => {
+    return new Promise((resolve) => {
+        const canvasEl = document.createElement('canvas');
+        canvasEl.width = width;
+        canvasEl.height = height;
+        const canvas = new fabric.Canvas(canvasEl);
+
+        const SHIRT_WIDTH_CM = 55;
+        const CM_TO_PX = 10;
+
+        fabric.Image.fromURL(backgroundSrc, { crossOrigin: 'anonymous' }).then((bgImg) => {
+            bgImg.scaleToWidth(SHIRT_WIDTH_CM * CM_TO_PX);
+            bgImg.set({
+                left: canvas.width / 2,
+                top: canvas.height / 2,
+                originX: 'center',
+                originY: 'center',
+                selectable: false,
+                evented: false,
+                isBackground: true
+            });
+            canvas.add(bgImg);
+            canvas.sendObjectToBack(bgImg);
+
+            if (stickersJson && stickersJson.objects) {
+                fabric.util.enlivenObjects(stickersJson.objects).then((enlivenedObjects) => {
+                    enlivenedObjects.forEach(obj => {
+                        if (!obj.isBackground) {
+                            canvas.add(obj);
+                        }
+                    });
+                    canvas.requestRenderAll();
+                    const dataURL = canvas.toDataURL({ format: 'png', multiplier: 2 });
+                    canvas.dispose();
+                    resolve(dataURL);
+                });
+            } else {
+                canvas.requestRenderAll();
+                const dataURL = canvas.toDataURL({ format: 'png', multiplier: 2 });
+                canvas.dispose();
+                resolve(dataURL);
+            }
+        });
+    });
+};

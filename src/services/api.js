@@ -9,6 +9,47 @@ import { getStoredToken, refreshToken } from './auth';
 
 const GOOGLE_BRIDGE_URL = import.meta.env.VITE_GOOGLE_BRIDGE_URL;
 
+export const detectMuslimah = async (imageBase64) => {
+    try {
+        const cleanImage = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+        const geminiUrl = GOOGLE_BRIDGE_URL || `https://asia-southeast1-aiplatform.googleapis.com/v1/projects/premium-carving-481411-d2/locations/asia-southeast1/publishers/google/models/gemini-2.0-flash-001:generateContent`;
+        
+        const payload = {
+            contents: [{
+                role: "user",
+                parts: [
+                    { text: "Analyze this person. Return ONLY a JSON object with a single boolean field 'is_muslimah' indicating if they are wearing a hijab or headscarf. Output: {\"is_muslimah\": true/false}" },
+                    { inline_data: { mime_type: 'image/png', data: cleanImage } }
+                ]
+            }],
+            generationConfig: { response_mime_type: "application/json" }
+        };
+
+        let result;
+        if (GOOGLE_BRIDGE_URL) {
+            const response = await fetch(GOOGLE_BRIDGE_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'gemini', payload: payload }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            result = await response.json();
+        } else {
+            const token = getStoredToken();
+            const resp = await axios.post(geminiUrl, payload, { 
+                headers: { 'Authorization': `Bearer ${token}` } 
+            });
+            result = resp.data;
+        }
+
+        const text = result.candidates[0].content.parts[0].text;
+        const data = JSON.parse(text);
+        return !!data.is_muslimah;
+    } catch (err) {
+        console.error("Muslimah Detection Error:", err);
+        return false;
+    }
+};
+
 export const tryOn = async (humanImageBase64, designImageBase64, isRetry = false) => {
   const cleanHuman = humanImageBase64.split(',')[1];
   const cleanDesign = designImageBase64.split(',')[1];

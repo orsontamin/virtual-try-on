@@ -68,19 +68,19 @@ const Toolbar = ({ canvas, compact }) => {
 
   if (compact) {
       return (
-        <div className="w-full space-y-2 -mt-4">
-            <div className="flex justify-between items-center px-4">
-                <p className="text-sm font-black uppercase tracking-[0.4em] text-tech-black/40 italic">STICKER CATALOGUE</p>
-                <button onClick={clearCanvas} className="text-[10px] font-bold text-u-orange uppercase tracking-tighter flex items-center gap-2 px-4 py-2 bg-u-orange/5 border-2 border-u-orange/10 rounded-pill active:scale-95 transition-all">
-                    <Trash2 size={12} /> CLEAR DESIGN
+        <div className="w-full space-y-1.5 -mt-3">
+            <div className="flex justify-between items-center px-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-tech-black/40 italic">STICKER CATALOGUE</p>
+                <button onClick={clearCanvas} className="text-[8px] font-bold text-u-orange uppercase tracking-tighter flex items-center gap-1.5 px-3 py-1.5 bg-u-orange/5 border border-u-orange/10 rounded-pill active:scale-95 transition-all">
+                    <Trash2 size={10} /> CLEAR
                 </button>
             </div>
-            <div className="flex gap-4 overflow-x-auto pt-2 pb-6 scrollbar-hide px-4">
+            <div className="flex gap-3 overflow-x-auto pt-1 pb-4 scrollbar-hide px-2">
                 {STICKERS.map((sticker) => (
                     <button 
                         key={sticker.id}
                         onClick={() => addSticker(sticker)}
-                        className="flex-shrink-0 w-36 h-36 border-2 border-tech-black/5 bg-white rounded-[40px] p-6 transition-all duration-500 hover:border-u-orange hover:shadow-[0_20px_40px_rgba(215,63,9,0.15)] active:scale-90 shadow-sm"
+                        className="flex-shrink-0 w-24 h-24 border border-tech-black/5 bg-white rounded-[24px] p-4 transition-all duration-500 hover:border-u-orange hover:shadow-[0_10px_20px_rgba(215,63,9,0.1)] active:scale-90 shadow-sm"
                     >
                         <img src={sticker.src} alt={sticker.id} className="w-full h-full object-contain" />
                     </button>

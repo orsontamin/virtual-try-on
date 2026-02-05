@@ -67,27 +67,8 @@ const HistoryPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="p-8 h-full">
       <div className="max-w-6xl mx-auto">
-        <header className="mb-8 flex items-center justify-between">
-            <div>
-                <Link to="/" className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition mb-2">
-                    <ArrowLeft size={20} /> Back to Wizard
-                </Link>
-                <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-                    <ImageIcon className="text-purple-600" size={32} /> Generated History
-                </h1>
-            </div>
-            {images.length > 0 && (
-                <button 
-                    onClick={handleClear}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
-                >
-                    <Trash2 size={18} /> Clear All
-                </button>
-            )}
-        </header>
-
         {images.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-xl border border-gray-100 shadow-sm">
                 <ImageIcon size={48} className="mx-auto text-gray-300 mb-4" />

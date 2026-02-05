@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Sparkles, RefreshCw, Download, Zap, ClipboardList, Box, Cloud, Camera, Image as ImageIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Sparkles, RefreshCw, Download, Zap } from 'lucide-react';
 import HumanInput from '../components/HumanInput';
 import { analyzeAndConsultGlam } from '../services/glam-api';
 import { saveToHistory } from '../services/history';
@@ -59,10 +59,9 @@ const GlamStudioPage = () => {
       try {
           const data = await analyzeAndConsultGlam(img);
           if (data && data.image) {
-              // Background Decoding (ImageBitmap Strategy)
               const response = await fetch(data.image);
               const blob = await response.blob();
-              const bitmap = await createImageBitmap(blob);
+              await createImageBitmap(blob);
               
               const endTime = performance.now();
               const duration = ((endTime - startTime) / 1000).toFixed(2);
@@ -85,48 +84,20 @@ const GlamStudioPage = () => {
   };
 
   return (
-    <div className='min-h-screen bg-[#0a0a0a] text-stone-200 flex flex-col font-sans selection:bg-pink-500/30'>
-      {/* Glam Header */}
-      <header className='p-6 flex justify-between items-center max-w-7xl mx-auto w-full border-b border-white/5'>
-        <div className='flex items-center gap-4'>
-            <button 
-                onClick={() => navigate('/')}
-                className='p-2 hover:bg-white/5 rounded-full transition text-white/50 hover:text-white'
-            >
-                <ArrowLeft size={24} />
-            </button>
-            <div className='flex items-center gap-3'>
-                <div className='w-12 h-12 bg-gradient-to-tr from-pink-500 to-violet-600 rounded-lg flex items-center justify-center text-white shadow-xl shadow-pink-900/20'>
-                    <Sparkles size={24} />
-                </div>
-                <div>
-                    <h1 className='text-xl font-black tracking-tight uppercase leading-none'>AI.<span className='text-pink-500'>MAKEUP</span></h1>
-                    <p className='text-[8px] text-pink-500 font-bold tracking-widest uppercase'>Master MUA Hybrid Engine</p>
-                </div>
-            </div>
-        </div>
-        <button 
-            onClick={handleAuthorize}
-            className='flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-pink-500 transition-all active:scale-95'
-        >
-            <RefreshCw size={12} className={isAuthorizing ? "animate-spin" : ""} />
-            {isAuthorizing ? "Authorizing..." : "Refresh Session"}
-        </button>
-      </header>
-
+    <div className='flex flex-col font-sans selection:bg-pink-500/30 h-full text-tech-black'>
       <main className='flex-grow flex flex-col items-center justify-center p-4 md:p-8'>
         
         {step === 1 && (
             <div className='w-full max-w-4xl animate-in fade-in duration-1000 flex flex-col items-center'>
                 <div className='text-center mb-12 space-y-3'>
-                    <h2 className='text-5xl md:text-7xl font-black tracking-tighter leading-tight text-white italic underline decoration-pink-500 decoration-8 underline-offset-8'>
+                    <h2 className='text-5xl md:text-7xl font-black tracking-tighter leading-tight italic underline decoration-pink-500 decoration-8 underline-offset-8'>
                         UNVEIL YOUR GLOW.
                     </h2>
                     <p className='text-stone-500 font-bold uppercase tracking-widest text-sm pt-4'>AI Master MUA 4-Style Transformation</p>
                 </div>
                 
                 <div className='w-full relative shadow-[0_0_50px_rgba(236,72,153,0.2)]'>
-                    <HumanInput onImageSelect={handleCapture} />
+                    <HumanInput onImageSelect={handleCapture} actionLabel="STYLE NOW" />
                 </div>
             </div>
         )}
@@ -241,14 +212,7 @@ const GlamStudioPage = () => {
                 )}
             </div>
         )}
-
       </main>
-
-      <footer className='p-8 mt-auto flex flex-col md:flex-row justify-between items-center gap-6 max-w-7xl mx-auto w-full border-t border-white/5 bg-[#0a0a0a]'>
-        <div className='text-stone-700 font-black text-[10px] uppercase tracking-[0.2em]'>
-            Glam Logic &copy; EventzFlow Studio 2026
-        </div>
-      </footer>
     </div>
   );
 };
