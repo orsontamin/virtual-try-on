@@ -164,12 +164,6 @@ const BarberKioskPage = () => {
                         actionLabel="STYLE NOW"
                     />
                 </div>
-
-                <div className="pb-4">
-                    <button onClick={() => navigate('/')} className="px-10 py-4 bg-tech-black text-white rounded-pill font-black hover:bg-u-orange transition-all active:scale-95 flex items-center gap-3 uppercase text-base tracking-tighter shadow-xl">
-                        <ArrowLeft size={20} /> Back
-                    </button>
-                </div>
             </div>
         )}
 
