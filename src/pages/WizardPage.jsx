@@ -322,7 +322,7 @@ function WizardPage() {
                         <div className={`relative flex gap-6 w-full m-6 pb-12 ${isPortraitMode ? 'max-w-2xl flex-col px-10' : 'md:flex-row max-sm'}`}>
                             <button 
                                 onClick={() => { setStep(1); setResultImage(null); setSelectedShirt('/assets/shirts/base-canvas-black-shirt.png'); setSavedDesign(null); }}
-                                className="flex-grow py-5 bg-black text-white rounded-pill font-black text-3xl hover:bg-tech-black shadow-[0_30px_80px_rgba(215,63,9,0.3)] transition-all active:scale-95 uppercase tracking-tighter italic"
+                                className="flex-grow p-2 bg-black text-white rounded-pill font-black text-xl hover:bg-tech-black shadow-[0_30px_80px_rgba(215,63,9,0.3)] transition-all active:scale-95 uppercase tracking-tighter italic"
                             >
                                 NEW SESSION
                             </button>
