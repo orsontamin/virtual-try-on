@@ -3,7 +3,7 @@ import { Trash2, Download, Sticker, Zap } from 'lucide-react';
 import * as fabric from 'fabric';
 import { createDeleteControl, applyStickerSettings } from '../utils/fabric-utils';
 
-const STICKERS = Array.from({ length: 12 }, (_, i) => ({
+const STICKERS = Array.from({ length: 6 }, (_, i) => ({
   id: `sticker-${i + 1}`,
   src: `assets/stickers/sticker-${i + 1}.png`
 }));
