@@ -4,7 +4,7 @@ import Toolbar from '../components/Toolbar';
 import WardrobeSelector from '../components/WardrobeSelector';
 import HumanInput from '../components/HumanInput';
 import { ArrowRight, ArrowLeft, RefreshCw, BarChart3, Image as ImageIcon, Sparkles, Scissors, Zap, Download, Wifi } from 'lucide-react';
-import { tryOn, detectMuslimah } from '../services/api';
+import { tryOn, analyzePersonAttire } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { saveToHistory } from '../services/history';
 import { saveImageToDrive } from '../services/google-drive';
@@ -108,14 +108,22 @@ function WizardPage() {
       setError(null);
       setShareUrl(null);
       try {
-          // Detect Muslimah (Hijab) - if detected, auto-switch to long sleeves
+          // Analyze person for specific requirements (Hijab, Sleeveless)
           let finalDesignImage = designImage;
-          const isMuslimah = await detectMuslimah(finalHumanImage);
+          const attire = await analyzePersonAttire(finalHumanImage);
           
-          if (isMuslimah && savedDesign) {
-              console.log("🧕 Muslimah detected. Automatically switching to long-sleeve canvas...");
-              const LONG_SLEEVE_CANVAS = '/assets/shirts/long-sleeve-canvas.png';
-              finalDesignImage = await generateDesignImage(savedDesign, LONG_SLEEVE_CANVAS);
+          if (savedDesign) {
+              if (attire.is_muslimah) {
+                  console.log("🧕 Muslimah detected. Switching to long-sleeve canvas...");
+                  const LONG_SLEEVE_CANVAS = '/assets/shirts/long-sleeve-canvas.png';
+                  finalDesignImage = await generateDesignImage(savedDesign, LONG_SLEEVE_CANVAS);
+              } else if (attire.is_sleeveless) {
+                  console.log("👕 Sleeveless detected. Ensuring output has sleeves...");
+                  // If they are sleeveless, we use the standard shirt but regenerate it 
+                  // to be sure the model treats it as a full garment swap.
+                  const STANDARD_CANVAS = '/assets/shirts/base-canvas-black-shirt.png';
+                  finalDesignImage = await generateDesignImage(savedDesign, STANDARD_CANVAS);
+              }
           }
 
           const result = await tryOn(finalHumanImage, finalDesignImage);

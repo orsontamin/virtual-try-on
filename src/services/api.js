@@ -9,7 +9,7 @@ import { getStoredToken, refreshToken } from './auth';
 
 const GOOGLE_BRIDGE_URL = import.meta.env.VITE_GOOGLE_BRIDGE_URL;
 
-export const detectMuslimah = async (imageBase64) => {
+export const analyzePersonAttire = async (imageBase64) => {
     try {
         const cleanImage = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
         const geminiUrl = GOOGLE_BRIDGE_URL || `https://asia-southeast1-aiplatform.googleapis.com/v1/projects/premium-carving-481411-d2/locations/asia-southeast1/publishers/google/models/gemini-2.0-flash-001:generateContent`;
@@ -18,7 +18,7 @@ export const detectMuslimah = async (imageBase64) => {
             contents: [{
                 role: "user",
                 parts: [
-                    { text: "Analyze this person. Return ONLY a JSON object with a single boolean field 'is_muslimah' indicating if they are wearing a hijab or headscarf. Output: {\"is_muslimah\": true/false}" },
+                    { text: "Analyze this person's attire. Detect if they are a Muslimah (wearing a hijab) or if they are wearing sleeveless clothing (bare arms, tank top, or sleeveless shirt). Return ONLY a JSON object with boolean fields: {\"is_muslimah\": true/false, \"is_sleeveless\": true/false}" },
                     { inline_data: { mime_type: 'image/png', data: cleanImage } }
                 ]
             }],
@@ -43,10 +43,10 @@ export const detectMuslimah = async (imageBase64) => {
 
         const text = result.candidates[0].content.parts[0].text;
         const data = JSON.parse(text);
-        return !!data.is_muslimah;
+        return data; // Returns { is_muslimah: boolean, is_sleeveless: boolean }
     } catch (err) {
-        console.error("Muslimah Detection Error:", err);
-        return false;
+        console.error("Attire Analysis Error:", err);
+        return { is_muslimah: false, is_sleeveless: false };
     }
 };
 
