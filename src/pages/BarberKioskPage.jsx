@@ -120,8 +120,8 @@ const BarberKioskPage = () => {
               
               setResult(data);
               
-              // Apply Frame to the result
-              const framedImage = await applyFrame(data.image, '/assets/screen/screen-grooming-frame.png');
+              // Apply Frame to the result (scale down content to avoid logo overlap)
+              const framedImage = await applyFrame(data.image, '/assets/screen/screen-grooming-frame.png', { contentScale: 0.85 });
               data.image = framedImage; // Update data.image with framed version
               
               saveToHistory(data.image);
