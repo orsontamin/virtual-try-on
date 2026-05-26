@@ -132,7 +132,17 @@ const HumanInput = ({
   };
 
   useEffect(() => {
-    // startCamera(); // REMOVED: User must manually open camera
+    // Check if permission is already granted to auto-open
+    if (navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: 'camera' }).then(permissionStatus => {
+            if (permissionStatus.state === 'granted') {
+                startCamera();
+            }
+        }).catch(err => {
+            console.warn("Permission query not supported or failed:", err);
+        });
+    }
+
     return () => stopCamera();
   }, []);
 

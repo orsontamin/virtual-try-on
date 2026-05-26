@@ -2,7 +2,8 @@ import React from 'react';
 import { Shirt } from 'lucide-react';
 
 const SHIRTS = [
-  { id: 'premium', name: 'Premium Tee', src: '/assets/shirts/base-canvas-black-shirt.png' },
+  { id: 'cap-city', name: 'Cap City Special', src: '/assets/shirts/cap-city-front.png', type: 'pre-printed' },
+  { id: 'heat-press', name: 'Heat Press', src: '/assets/shirts/base-canvas-black-shirt.png', type: 'custom' },
 ];
 
 const WardrobeSelector = ({ selectedShirt, onSelect, compact = true }) => {
@@ -21,6 +22,9 @@ const WardrobeSelector = ({ selectedShirt, onSelect, compact = true }) => {
                         }`}
                     >
                         <img src={shirt.src} alt={shirt.name} className="w-full h-full object-contain" />
+                        <div className="mt-4 text-center">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-tech-black/60">{shirt.name}</span>
+                        </div>
                     </button>
                 ))}
             </div>
@@ -37,7 +41,7 @@ const WardrobeSelector = ({ selectedShirt, onSelect, compact = true }) => {
             </div>
             <div>
                 <h3 className="text-xl font-black text-tech-black uppercase tracking-tighter italic leading-none">BASE CANVAS</h3>
-                <p className="text-tech-black/40 text-[8px] font-black uppercase tracking-widest mt-1">Sabah Edition</p>
+                <p className="text-tech-black/40 text-[8px] font-black uppercase tracking-widest mt-1">Select your path</p>
             </div>
         </div>
         

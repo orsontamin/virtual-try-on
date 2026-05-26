@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import * as fabric from 'fabric';
 import { createDeleteControl, applyStickerSettings } from '../utils/fabric-utils';
 
-const DesignCanvas = ({ onCanvasReady, initialDesign }) => {
+const DesignCanvas = ({ onCanvasReady, initialDesign, background, readOnly = false }) => {
   const canvasRef = useRef(null);
   const [fabricCanvas, setFabricCanvas] = useState(null);
   const isInitRef = useRef(false);
@@ -11,8 +11,7 @@ const DesignCanvas = ({ onCanvasReady, initialDesign }) => {
   
   const deleteControl = useMemo(() => createDeleteControl(), []);
 
-  const DEFAULT_SHIRT = '/assets/shirts/base-canvas-black-shirt.png';
-  const currentShirt = DEFAULT_SHIRT; // Force use of base-canvas-black-shirt
+  const currentShirt = background || '/assets/shirts/base-canvas-black-shirt.png';
 
   const CM_TO_PX = 10; 
   const SHIRT_WIDTH_CM = 55; // Natural width for relative scaling
@@ -62,7 +61,15 @@ const DesignCanvas = ({ onCanvasReady, initialDesign }) => {
         width: 625,
         height: 750,
         backgroundColor: 'transparent',
+        selection: !readOnly,
       });
+
+      if (readOnly) {
+          canvas.forEachObject(obj => {
+              obj.selectable = false;
+              obj.evented = false;
+          });
+      }
 
       // Alignment Guide logic
       canvas.on('object:moving', (e) => {

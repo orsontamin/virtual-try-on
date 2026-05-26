@@ -1,11 +1,11 @@
-import React, { useMemo } from 'react';
-import { Trash2, Download, Sticker, Zap } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Trash2, Download, Sticker, Zap, Info } from 'lucide-react';
 import * as fabric from 'fabric';
 import { createDeleteControl, applyStickerSettings } from '../utils/fabric-utils';
 
 const STICKERS = Array.from({ length: 6 }, (_, i) => ({
   id: `sticker-${i + 1}`,
-  src: `assets/stickers/sticker-${i + 1}.png`
+  src: `/assets/stickers/sticker-${i + 1}.png`
 }));
 
 const STICKER_DIMENSIONS = {
@@ -19,11 +19,17 @@ const STICKER_DIMENSIONS = {
 
 const CM_TO_PX = 7.2; // Reduced by additional 10%
 
-const Toolbar = ({ canvas, compact }) => {
+const Toolbar = ({ canvas, compact, onShirtChange }) => {
   const deleteControl = useMemo(() => createDeleteControl(), []);
+  const [selectedStickerId, setSelectedStickerId] = useState(null);
 
   const addSticker = (sticker) => {
     if (!canvas) return;
+    
+    // Clear existing stickers first (Only 1 sticker allowed)
+    clearCanvas();
+    setSelectedStickerId(sticker.id);
+
     fabric.Image.fromURL(sticker.src, { crossOrigin: 'anonymous' }).then((img) => {
       const dims = STICKER_DIMENSIONS[sticker.id];
       
@@ -64,6 +70,7 @@ const Toolbar = ({ canvas, compact }) => {
             canvas.remove(obj);
         }
     }
+    setSelectedStickerId(null);
   };
 
   if (compact) {
@@ -80,7 +87,9 @@ const Toolbar = ({ canvas, compact }) => {
                     <button 
                         key={sticker.id}
                         onClick={() => addSticker(sticker)}
-                        className="flex-shrink-0 w-24 h-24 border border-tech-black/5 bg-white rounded-[24px] p-4 transition-all duration-500 hover:border-u-orange hover:shadow-[0_10px_20px_rgba(215,63,9,0.1)] active:scale-90 shadow-sm"
+                        className={`flex-shrink-0 w-24 h-24 border rounded-[24px] p-4 transition-all duration-500 hover:border-u-orange hover:shadow-[0_10px_20px_rgba(215,63,9,0.1)] active:scale-90 shadow-sm ${
+                            selectedStickerId === sticker.id ? 'border-u-orange bg-u-orange/5 ring-2 ring-u-orange/20' : 'border-tech-black/5 bg-white'
+                        }`}
                     >
                         <img src={sticker.src} alt={sticker.id} className="w-full h-full object-contain" />
                     </button>
@@ -108,7 +117,9 @@ const Toolbar = ({ canvas, compact }) => {
                 <button 
                     key={sticker.id}
                     onClick={() => addSticker(sticker)}
-                    className="border-2 border-tech-black/5 rounded-[32px] p-6 hover:border-u-orange hover:bg-u-orange/5 transition-all shadow-sm flex justify-center items-center group bg-soft-white/10"
+                    className={`border-2 rounded-[32px] p-6 hover:border-u-orange hover:bg-u-orange/5 transition-all shadow-sm flex justify-center items-center group ${
+                        selectedStickerId === sticker.id ? 'border-u-orange bg-u-orange/5' : 'border-tech-black/5 bg-soft-white/10'
+                    }`}
                 >
                     <img src={sticker.src} alt={sticker.id} className="w-16 h-16 object-contain group-hover:scale-110 transition-transform duration-500" />
                 </button>

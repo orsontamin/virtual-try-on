@@ -33,12 +33,22 @@ export const analyzePersonAttire = async (imageBase64) => {
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             result = await response.json();
+            
+            if (result.success === false) {
+                console.error("❌ Bridge Error (Attire):", result.error);
+                throw new Error(result.error);
+            }
         } else {
             const token = getStoredToken();
             const resp = await axios.post(geminiUrl, payload, { 
                 headers: { 'Authorization': `Bearer ${token}` } 
             });
             result = resp.data;
+        }
+
+        if (!result || !result.candidates || !result.candidates[0]) {
+            console.error("❌ Invalid Gemini Response Structure:", result);
+            throw new Error("INVALID_GEMINI_RESPONSE");
         }
 
         const text = result.candidates[0].content.parts[0].text;
@@ -73,7 +83,7 @@ export const tryOn = async (humanImageBase64, designImageBase64, isRetry = false
   };
 
   try {
-    console.log(`👕 Starting VTO Prediction via Bridge...`);
+    console.log(`👕 Starting VTO Prediction via Bridge... URL:`, GOOGLE_BRIDGE_URL);
     
     if (GOOGLE_BRIDGE_URL) {
         const response = await fetch(GOOGLE_BRIDGE_URL, {
@@ -86,12 +96,21 @@ export const tryOn = async (humanImageBase64, designImageBase64, isRetry = false
                 'Content-Type': 'text/plain;charset=utf-8'
             }
         });
+        
         const data = await response.json();
+        console.log("📥 VTO Bridge Response:", data ? "Received" : "Empty");
+        
+        if (data.success === false) {
+            console.error("❌ Bridge Error (VTO):", data.error);
+            return null;
+        }
         
         if (data.predictions && data.predictions[0]) {
             const prediction = data.predictions[0];
             const imgData = prediction.bytesBase64Encoded || prediction.outputImage;
             if (imgData) return `data:image/jpeg;base64,${imgData}`;
+        } else {
+            console.error("❌ VTO Bridge Prediction Missing:", data);
         }
     } else {
         // Fallback to direct if no bridge configured

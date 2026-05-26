@@ -1,27 +1,22 @@
 /**
- * MASTER BRIDGE: GOOGLE GEMINI AI + VTO PREDICTION + DRIVE STORAGE
+ * GOOGLE MASTER BRIDGE (v3.0 - All-in-One + Cap City Enhanced)
  * 
- * INSTRUCTIONS:
- * 1. Go to https://script.google.com
- * 2. Create a New Project.
- * 3. Replace all code in 'Code.gs' with the CONTENT section below.
- * 4. Click 'Project Settings' (cog icon) and check "Show 'appsscript.json' manifest file in editor".
- * 5. Open 'appsscript.json' in the editor and replace its content with the MANIFEST section below.
- * 6. Click 'Deploy' > 'New Deployment'.
- * 7. Select 'Web App', 'Execute As: Me', 'Who has access: Anyone'.
- * 8. Click 'Deploy' and authorize all permissions.
- * 9. Copy the Web App URL to your VITE_GOOGLE_BRIDGE_URL in .env.local.
+ * ACTIONS SUPPORTED:
+ * 1. 'gemini' - Proxies requests to Gemini 2.5 Flash
+ * 2. 'vto' - Proxies requests to Virtual Try-On 001
+ * 3. 'upload' - Saves images to Drive with Session Folder grouping for Cap City
  */
 
-// --- SECTION 1: CONTENT (Code.gs) ---
+// --- CONFIGURATION ---
+var PROJECT_ID = "premium-carving-481411-d2";
+var MASTER_FOLDER_NAME = "VTO_KIOSK_UPLOADS";
 
 function doPost(e) {
   var data;
   try {
     data = JSON.parse(e.postData.contents);
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ error: "Invalid JSON input" }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return createResponse({ success: false, error: "Invalid JSON input" });
   }
 
   var action = data.action;
@@ -33,25 +28,29 @@ function doPost(e) {
   } else if (action === 'upload') {
     return handleUpload(data.base64, data.filename);
   } else {
-    return ContentService.createTextOutput(JSON.stringify({ error: "Unknown action" }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return createResponse({ success: false, error: "Unknown action: " + action });
   }
 }
 
+/**
+ * GEMINI PROXY (us-central1)
+ */
 function handleGemini(payload) {
-  var PROJECT_ID = "premium-carving-481411-d2";
-  var LOCATION_ID = "us-central1";
-  var url = "https://" + LOCATION_ID + "-aiplatform.googleapis.com/v1/projects/" + PROJECT_ID + "/locations/" + LOCATION_ID + "/publishers/google/models/gemini-2.5-flash:generateContent";
+  var url = "https://us-central1-aiplatform.googleapis.com/v1/projects/" + PROJECT_ID + "/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent";
   return proxyVertex(url, payload);
 }
 
+/**
+ * VTO PROXY (asia-southeast1)
+ */
 function handleVTO(payload) {
-  var PROJECT_ID = "premium-carving-481411-d2";
-  var LOCATION_ID = "asia-southeast1";
-  var url = "https://" + LOCATION_ID + "-aiplatform.googleapis.com/v1/projects/" + PROJECT_ID + "/locations/" + LOCATION_ID + "/publishers/google/models/virtual-try-on-001:predict";
+  var url = "https://asia-southeast1-aiplatform.googleapis.com/v1/projects/" + PROJECT_ID + "/locations/asia-southeast1/publishers/google/models/virtual-try-on-001:predict";
   return proxyVertex(url, payload);
 }
 
+/**
+ * GENERIC VERTEX PROXY
+ */
 function proxyVertex(url, payload) {
   var options = {
     method: "post",
@@ -64,41 +63,56 @@ function proxyVertex(url, payload) {
   return ContentService.createTextOutput(response.getContentText()).setMimeType(ContentService.MimeType.JSON);
 }
 
+/**
+ * DRIVE UPLOAD + CAP CITY SESSION FOLDERS
+ */
 function handleUpload(base64, filename) {
   try {
-    var folderName = "VTO_KIOSK_UPLOADS";
-    var folders = DriveApp.getFoldersByName(folderName);
-    var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
-    
+    var masterFolders = DriveApp.getFoldersByName(MASTER_FOLDER_NAME);
+    var masterFolder = masterFolders.hasNext() ? masterFolders.next() : DriveApp.createFolder(MASTER_FOLDER_NAME);
+    var targetFolder = masterFolder;
+
+    // --- CAP CITY FOLDER LOGIC ---
+    if (filename.indexOf('vto-capcity') !== -1) {
+      // Filename format: vto-capcity-front-[timestamp].jpg
+      var parts = filename.split('-');
+      var timestamp = parts[parts.length - 1].split('.')[0];
+      var sessionFolderName = "Session_" + timestamp;
+      
+      var folders = masterFolder.getFoldersByName(sessionFolderName);
+      if (folders.hasNext()) {
+        targetFolder = folders.next();
+      } else {
+        targetFolder = masterFolder.createFolder(sessionFolderName);
+      }
+    }
+
     var contentType = base64.substring(base64.indexOf(":") + 1, base64.indexOf(";"));
     var bytes = Utilities.base64Decode(base64.split(",")[1]);
     var blob = Utilities.newBlob(bytes, contentType, filename);
-    var file = folder.createFile(blob);
+    var file = targetFolder.createFile(blob);
     
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     
-    return ContentService.createTextOutput(JSON.stringify({
+    return createResponse({
+      success: true,
       id: file.getId(),
       url: "https://drive.google.com/file/d/" + file.getId() + "/view",
-      success: true
-    })).setMimeType(ContentService.MimeType.JSON);
+      name: file.getName(),
+      folder: targetFolder.getName()
+    });
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.message })).setMimeType(ContentService.MimeType.JSON);
+    return createResponse({ success: false, error: "Upload Error: " + err.message });
   }
 }
 
-// --- SECTION 2: MANIFEST (appsscript.json) ---
-
-/*
-{
-  "timeZone": "Asia/Kuala_Lumpur",
-  "dependencies": {},
-  "exceptionLogging": "STACKDRIVER",
-  "runtimeVersion": "V8",
-  "oauthScopes": [
-    "https://www.googleapis.com/auth/cloud-platform",
-    "https://www.googleapis.com/auth/script.external_request",
-    "https://www.googleapis.com/auth/drive"
-  ]
+function createResponse(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
-*/
+
+/**
+ * RUN MANUALLY ONCE TO AUTHORIZE
+ */
+function triggerAuth() {
+  DriveApp.createFolder("AUTH_PROXIMITY_TEMP");
+}
