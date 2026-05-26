@@ -167,7 +167,7 @@ const GlamStudioPage = () => {
                             <div className='xl:w-[320px] w-full flex flex-col gap-6'>
                                 <div className='bg-[#151515] p-8 rounded-2xl border border-stone-800 shadow-2xl flex flex-col items-center justify-center min-h-[300px]'>
                                     <h3 className='text-xl font-black text-pink-500 mb-4 flex items-center gap-2 italic uppercase text-center justify-center'>
-                                        <Download size={20} /> Save Vibe
+                                        Save Vibe
                                     </h3>
                                     
                                     <div className="bg-white p-4 rounded-xl mb-6 flex justify-center w-[200px] h-[200px] items-center relative group">

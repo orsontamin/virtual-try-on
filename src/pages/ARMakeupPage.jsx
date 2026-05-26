@@ -414,8 +414,6 @@ const ARMakeupPage = () => {
                                             {generatingCollage ? <RefreshCw size={20} className="animate-spin" /> : <Sparkles size={20} />}
                                             <span className="text-[8px] font-black uppercase">Style Card</span>
                                         </button>
-                
-                                        <button className="p-4 bg-black/40 backdrop-blur-md text-white rounded-full hover:bg-slate-700 transition active:scale-90"><Download size={24} /></button>
               </div>
             </>
           )}

@@ -48,15 +48,6 @@ const SharePage = () => {
                         </div>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <a 
-                                href={downloadUrl}
-                                download
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 py-6 bg-tech-black text-white rounded-[32px] font-black text-xl hover:bg-u-orange transition shadow-xl flex items-center justify-center gap-3 px-12"
-                            >
-                                <Download size={24} /> DOWNLOAD
-                            </a>
                             <button 
                                 onClick={() => {
                                     if (navigator.share) {
@@ -69,9 +60,9 @@ const SharePage = () => {
                                         alert("Link copied to clipboard!");
                                     }
                                 }}
-                                className="py-6 px-10 bg-white border-2 border-tech-black/5 text-tech-black rounded-[32px] font-black hover:bg-soft-white transition flex items-center justify-center gap-3"
+                                className="flex-1 py-6 bg-tech-black text-white rounded-[32px] font-black text-xl hover:bg-u-orange transition shadow-xl flex items-center justify-center gap-3 px-12"
                             >
-                                <Share2 size={24} /> SHARE
+                                <Share2 size={24} /> SHARE LINK
                             </button>
                         </div>
                         

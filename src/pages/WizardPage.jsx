@@ -577,15 +577,6 @@ function WizardPage() {
                                         </div>
                                     )}
                                 </div>
-                                {resultImage && (
-                                    <a 
-                                        href={resultImage} 
-                                        download={`vto-result-${Date.now()}.png`}
-                                        className="mt-2 text-[8px] font-black text-u-orange hover:text-tech-black transition-colors uppercase tracking-widest flex items-center gap-1"
-                                    >
-                                        <Download size={10} /> Direct Download
-                                    </a>
-                                )}
                             </div>
                         </div>
 
