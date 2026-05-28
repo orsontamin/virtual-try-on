@@ -14,9 +14,15 @@ const FAL_API_KEY = import.meta.env.VITE_FAL_API_KEY;
 const GOOGLE_BRIDGE_URL = import.meta.env.VITE_GOOGLE_BRIDGE_URL;
 
 // Configure Fal.ai Key
-fal.config({
-  credentials: FAL_API_KEY,
-});
+if (import.meta.env.PROD || !FAL_API_KEY) {
+  fal.config({
+    proxyUrl: "/api/fal/proxy",
+  });
+} else {
+  fal.config({
+    credentials: FAL_API_KEY,
+  });
+}
 
 // Safely handle the JSON config to prevent Vite build crashes
 let barberConfig = {};
@@ -67,7 +73,7 @@ export const analyzeAndConsult = async (imageBase64, isRetry = false) => {
   const googleToken = getStoredToken();
   let generatedPrompt = "";
   
-  if (!FAL_API_KEY) {
+  if (!import.meta.env.PROD && !FAL_API_KEY) {
       throw new Error("FAL_API_KEY_MISSING: Ensure VITE_FAL_API_KEY is set in .env.local");
   }
 

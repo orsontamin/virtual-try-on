@@ -157,7 +157,7 @@ const BarberKioskPage = () => {
       <main className='flex-grow flex flex-col items-center justify-center p-4 md:p-8'>
         
         {step === 1 && (
-            <div className="w-full h-full flex flex-col items-center justify-center py-4 px-6">
+            <div className={`w-full h-full flex flex-col items-center justify-center py-4 px-6 ${isPortraitMode ? 'scale-[0.9] transform-gpu origin-center' : ''}`}>
                 <div className='text-center mb-8 space-y-2'>
                     <h2 className="font-black tracking-tighter leading-tight text-tech-black italic uppercase text-5xl md:text-6xl">
                         {showReview ? 'REVIEW YOUR LOOK.' : 'TAKE YOUR SEAT.'}
@@ -210,9 +210,9 @@ const BarberKioskPage = () => {
         )}
 
         {step === 2 && (
-            <div className='w-full max-w-7xl md:h-[calc(100vh-180px)] flex flex-col items-center gap-6 animate-in fade-in duration-1000 md:overflow-hidden'>
+            <div className={`w-full max-w-7xl flex flex-col items-center gap-6 animate-in fade-in duration-1000 ${isPortraitMode ? 'scale-[0.9] transform-gpu origin-center' : ''}`}>
                 {loading ? (
-                    <div className='flex-1 flex flex-col items-center justify-center py-10 md:py-20 text-center space-y-12 animate-in fade-in duration-500'>
+                    <div className='flex flex-col items-center justify-center py-20 text-center space-y-12 animate-in fade-in duration-500'>
                         <div className="relative">
                             <div className="absolute -inset-8 bg-u-orange/20 rounded-full blur-2xl animate-pulse"></div>
                             <div className='relative w-32 h-32 flex items-center justify-center'>
@@ -236,51 +236,41 @@ const BarberKioskPage = () => {
                         </button>
                     </div>
                 ) : (
-                    <>
-                        <div className='w-full flex-1 flex flex-col md:flex-row gap-6 md:gap-10 min-h-0 items-start overflow-y-auto md:overflow-hidden px-4 md:px-0'>
-                            {/* Left Col: Info & Original (Small) */}
-                            <div className='w-full md:w-[200px] flex flex-row md:flex-col gap-4 min-h-0 items-center md:items-start'>
-                                <div className='w-24 md:w-full relative rounded-[20px] overflow-hidden shadow-[0_20px_50px_rgba(52,55,65,0.1)] border-4 border-white bg-white aspect-[3/4]'>
-                                    <img src={originalImage} alt='Original' className='w-full h-full object-cover' />
-                                </div>
-                            </div>
-
-                            {/* Right Col: Result (Dominant) */}
-                            <div className='flex-1 w-full flex flex-col gap-4 min-h-0'>
-                                <div className="space-y-1">
-                                    <h2 className="text-2xl md:text-4xl font-black text-tech-black tracking-tighter uppercase italic leading-none">THE TRANSFORMATION.</h2>
-                                    <p className="text-[10px] text-tech-black/40 font-black uppercase tracking-[0.4em]">AI Style Variations</p>
-                                </div>
-
-                                <div className='flex-1 relative group rounded-[32px] md:rounded-[60px] overflow-hidden shadow-[0_40px_100px_rgba(52,55,65,0.15)] border-8 md:border-[16px] border-white bg-white min-h-[350px] md:min-h-0'>
-                                    <div className="absolute -inset-12 bg-u-orange/5 blur-[100px] opacity-50 pointer-events-none animate-pulse"></div>
-                                    <img src={result?.image} alt='Result' className='w-full h-full object-contain relative z-10' />
-                                </div>
-                            </div>
+                    <div className='w-full flex flex-col items-center gap-10 px-4 md:px-0'>
+                        {/* Title Section */}
+                        <div className="space-y-1 w-full text-center">
+                            <h2 className="text-2xl md:text-4xl font-black text-tech-black tracking-tighter uppercase italic leading-none">THE TRANSFORMATION.</h2>
+                            <p className="text-[10px] text-tech-black/40 font-black uppercase tracking-[0.4em]">AI Style Variations</p>
                         </div>
 
-                        {/* Integrated Footer Section: QR + Next Button */}
-                        <div className={`w-full max-w-5xl flex ${isPortraitMode ? 'flex-row items-stretch gap-4 px-4' : 'flex-col gap-6'} mb-4 md:px-0 -mt-10 relative z-20`}>
+                        {/* Result Display */}
+                        <div className='relative group rounded-[32px] md:rounded-[60px] overflow-hidden shadow-[0_40px_100px_rgba(52,55,65,0.15)] border-8 md:border-[16px] border-white bg-white w-full max-w-3xl'>
+                            <div className="absolute -inset-12 bg-u-orange/5 blur-[100px] opacity-50 pointer-events-none animate-pulse"></div>
+                            <img src={result?.image} alt='Result' className='w-full h-auto object-contain relative z-10' />
+                        </div>
+
+                        {/* Actions Section: QR + Next Button (Now directly below) */}
+                        <div className="w-full max-w-3xl flex flex-col gap-6">
                             {/* Horizontal QR Banner */}
-                            <div className={`bg-white rounded-[32px] md:rounded-[60px] border-2 border-tech-black/5 shadow-2xl flex items-center justify-center ${isPortraitMode ? 'flex-[1.5] p-3' : 'p-6 md:p-10 flex-col md:flex-row gap-6 md:gap-12'}`}>
-                                <div className={`flex items-center gap-4 ${isPortraitMode ? 'flex-row' : 'flex-col md:flex-row'}`}>
-                                    <div className={`bg-soft-white rounded-[20px] md:rounded-[32px] border-2 border-tech-black/5 flex items-center justify-center relative group ${isPortraitMode ? 'w-20 h-20 md:w-28 md:h-28' : 'min-w-[180px] min-h-[180px] md:min-w-[220px] md:min-h-[220px] p-4'}`}>
+                            <div className="bg-white rounded-[32px] md:rounded-[48px] border-2 border-tech-black/5 shadow-xl flex items-center justify-center p-6 w-full">
+                                <div className="flex items-center gap-6">
+                                    <div className="bg-soft-white rounded-[24px] border-2 border-tech-black/5 flex items-center justify-center relative group w-28 h-28 md:w-36 md:h-36">
                                         {shareUrl ? (
                                             <img 
                                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(shareUrl)}`} 
                                                 alt="QR" 
-                                                className={`${isPortraitMode ? 'w-16 h-16 md:w-24 md:h-24' : 'w-36 h-36 md:w-48 md:h-48'} mix-blend-multiply animate-in fade-in duration-500`}
+                                                className="w-20 h-20 md:w-28 md:h-28 mix-blend-multiply animate-in fade-in duration-500"
                                             />
                                         ) : (
                                             <div className="flex flex-col items-center gap-2 text-tech-black/20">
-                                                <RefreshCw size={isPortraitMode ? 16 : 24} className="animate-spin text-tech-black" />
-                                                <span className={`${isPortraitMode ? 'text-[6px]' : 'text-[8px] md:text-[10px]'} font-black uppercase tracking-widest italic`}>Syncing...</span>
+                                                <RefreshCw size={24} className="animate-spin text-tech-black" />
+                                                <span className="text-[8px] font-black uppercase tracking-widest italic">Syncing...</span>
                                             </div>
                                         )}
                                     </div>
-                                    <div className={`space-y-0.5 ${isPortraitMode ? 'text-left max-w-[80px] md:max-w-none' : 'text-center md:text-left'}`}>
-                                        <h3 className={`${isPortraitMode ? 'text-[8px] md:text-sm' : 'text-xl md:text-3xl'} font-black text-tech-black uppercase tracking-tighter italic leading-tight`}>SCAN TO DOWNLOAD</h3>
-                                        {isPortraitMode && <p className="text-[6px] font-bold text-tech-black/30 uppercase tracking-[0.2em]">YOUR LOOK</p>}
+                                    <div className="space-y-1">
+                                        <h3 className="text-xl md:text-2xl font-black text-tech-black uppercase tracking-tighter italic leading-tight">SCAN TO DOWNLOAD</h3>
+                                        <p className="text-[10px] font-bold text-tech-black/30 uppercase tracking-[0.2em]">YOUR NEW LOOK</p>
                                     </div>
                                 </div>
                             </div>
@@ -292,13 +282,13 @@ const BarberKioskPage = () => {
                                     setResult(null);
                                     setOriginalImage(null);
                                 }}
-                                className={`bg-u-orange text-white rounded-[32px] md:rounded-[60px] font-black hover:bg-tech-black transition-all active:scale-95 shadow-[0_30px_80px_rgba(215,63,9,0.3)] uppercase tracking-tighter italic flex flex-col items-center justify-center gap-1 group relative overflow-hidden ${isPortraitMode ? 'flex-1 py-4 text-lg md:text-2xl px-4' : 'w-full py-8 md:py-12 text-3xl md:text-5xl'}`}
+                                className="bg-u-orange text-white rounded-[32px] md:rounded-[48px] font-black hover:bg-tech-black transition-all active:scale-95 shadow-lg uppercase tracking-tighter italic flex flex-col items-center justify-center gap-1 group relative overflow-hidden w-full py-8 md:py-10 text-3xl"
                             >
-                                <span className={`${isPortraitMode ? 'text-[6px]' : 'text-[8px] md:text-[10px]'} font-black tracking-[0.5em] text-white/60 group-hover:text-white transition-colors uppercase`}>READY?</span>
+                                <span className="text-[10px] font-black tracking-[0.5em] text-white/60 group-hover:text-white transition-colors uppercase">READY?</span>
                                 START NEW
                             </button>
                         </div>
-                    </>
+                    </div>
                 )}
             </div>
         )}
