@@ -191,7 +191,7 @@ const BarberKioskPage = () => {
                                     onClick={() => handleCapture()}
                                     className="flex-[2] py-6 bg-u-orange text-white rounded-pill font-black uppercase tracking-tighter shadow-[0_20px_40px_rgba(215,63,9,0.25)] hover:bg-tech-black transition-all active:scale-95 flex items-center justify-center gap-4 text-lg italic"
                                 >
-                                    CONFIRM & STYLE <Zap size={24} fill="white" />
+                                    CONFIRM <Zap size={24} fill="white" />
                                 </button>
                             </div>
                         </div>

@@ -31,8 +31,7 @@ function WizardPage() {
   const [designImageBack, setDesignImageBack] = useState(null);
   const [humanImage, setHumanImage] = useState(null);
   const [humanImageBack, setHumanImageBack] = useState(null);
-  const [capCityStep, setCapCityStep] = useState('any'); // 'any', 'remaining', or 'done'
-  const [detectedOrientation, setDetectedOrientation] = useState(null);
+  const [capCityStep, setCapCityStep] = useState('front'); // 'front' or 'back'
   const [showReview, setShowReview] = useState(false);
   const [resultImage, setResultImage] = useState(null);
   const [resultImageBack, setResultImageBack] = useState(null);
@@ -104,27 +103,35 @@ function WizardPage() {
     if (!selectedShirt) return;
     setStep(2);
     
-    // If it's Cap City, we load the specific front/back reference images
+    // If it's Cap City, we pre-generate both front and back design images
     if (selectedShirt.includes('cap-city')) {
-        const getBase64FromUrl = (url) => {
+        const generateView = (src) => {
             return new Promise((resolve) => {
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    resolve(canvas.toDataURL('image/png'));
-                };
-                img.src = url;
+                const canvasEl = document.createElement('canvas');
+                canvasEl.width = 625;
+                canvasEl.height = 750;
+                const tempCanvas = new fabric.Canvas(canvasEl);
+                
+                fabric.Image.fromURL(src, { crossOrigin: 'anonymous' }).then((img) => {
+                    img.scaleToWidth(550); 
+                    img.set({
+                        left: 312.5,
+                        top: 375,
+                        originX: 'center',
+                        originY: 'center'
+                    });
+                    tempCanvas.add(img);
+                    tempCanvas.requestRenderAll();
+                    const dataURL = tempCanvas.toDataURL({ format: 'png', multiplier: 2 });
+                    tempCanvas.dispose();
+                    resolve(dataURL);
+                });
             });
         };
 
         Promise.all([
-            getBase64FromUrl('/assets/shirts/capcity-front.png'),
-            getBase64FromUrl('/assets/shirts/capcity-back.png')
+            generateView('/assets/shirts/cap-city-front.png'),
+            generateView('/assets/shirts/cap-city-back.png')
         ]).then(([frontData, backData]) => {
             setDesignImage(frontData);
             setDesignImageBack(backData);
@@ -155,112 +162,110 @@ function WizardPage() {
       console.log("🎬 handleGenerate called!", { selectedShirt, capCityStep, showReview, hasImage: !!imgToUse });
       const isCapCity = selectedShirt.includes('cap-city');
       
-      // Phase 1: Initial Capture -> Show Review
-      if (imgToUse && !showReview) {
+      // Step 1: Handle Front Confirmation
+      if (isCapCity && capCityStep === 'front') {
           setHumanImage(imgToUse);
+          setCapCityStep('back');
+          return;
+      }
+
+      // Step 2: Handle Back Confirmation -> Move to Review
+      if (isCapCity && capCityStep === 'back' && !showReview) {
+          setHumanImageBack(imgToUse);
           setShowReview(true);
           return;
       }
 
-      // Phase 2: User Confirmed -> Analysis & Processing
-      setLoading(true);
-      setLoadingStep(0);
+      // Step 3: Processing (Triggered from Review)
+      const finalHumanFront = isCapCity ? humanImage : (imgToUse || humanImage);
+      const finalHumanBack = isCapCity ? humanImageBack : null;
       
-      let finalHumanFront = humanImage;
-      let finalHumanBack = humanImageBack;
-      let analysis = null;
-
-      try {
-          // Detect Orientation & Attire ONLY for Cap City
-          if (isCapCity) {
-              analysis = await analyzePersonAttire(humanImage);
-              console.log("🔍 Analysis Result:", analysis);
-              setDetectedOrientation(analysis.orientation);
-              
-              // DYNAMIC SLOT ASSIGNMENT
-              if (analysis.orientation === 'back') {
-                  setHumanImageBack(humanImage);
-                  setHumanImage(null); 
-                  finalHumanBack = humanImage;
-                  finalHumanFront = null;
-              } else if (analysis.orientation === 'both') {
-                  setHumanImageBack(humanImage);
-                  finalHumanFront = humanImage;
-                  finalHumanBack = humanImage;
-              } else {
-                  // Front detected
-                  finalHumanFront = humanImage;
-              }
-              setCapCityStep('done');
-          } else {
-              // Standard shirt: skip analysis, just use the image as front
-              finalHumanFront = humanImage;
-              setDetectedOrientation('front');
-          }
-      } catch (err) {
-          console.error("Analysis failed:", err);
-          // Fallback
-          finalHumanFront = humanImage;
+      // Ensure front image is set for the scanning preview
+      if (!isCapCity && imgToUse) {
+          setHumanImage(imgToUse);
       }
 
-      if (!finalHumanFront && !finalHumanBack) {
-          setLoading(false);
-          return;
-      }
+      if (!finalHumanFront || !designImage) return;
 
       setStep(4);
       setLoading(true);
       setError(null);
-      setShareUrl(null); 
+      setShareUrl(null); // Reset shareUrl
       try {
           if (isCapCity) {
-              console.log("🏙️ Processing Cap City VTO...");
+              console.log("🏙️ Processing Cap City Dual VTO...");
               
-              let resultFront = null;
-              let resultBack = null;
+              const resultFront = await tryOn(finalHumanFront, designImage);
+              console.log("🎨 Front VTO result:", resultFront ? "Success" : "Failed");
 
-              if (finalHumanFront) {
-                  resultFront = await tryOn(finalHumanFront, designImage);
-              }
-
-              if (finalHumanBack) {
-                  resultBack = await tryOn(finalHumanBack, designImageBack);
-              }
+              const resultBack = await tryOn(finalHumanBack, designImageBack);
+              console.log("🎨 Back VTO result:", resultBack ? "Success" : "Failed");
               
-              let finalResult = null;
               if (resultFront && resultBack) {
-                  finalResult = await combineImagesSideBySide(resultFront, resultBack);
-              } else {
-                  finalResult = resultFront || resultBack;
-              }
-
-              if (finalResult) {
-                  const framedResult = await applyFrame(finalResult, '/assets/screen/screen-03.png', { 
-                      contentScale: 1.1, 
-                      offsetY: 0 
-                  });
+                  const framedFront = await applyFrame(resultFront, '/assets/screen/screen-wardrobe-frame.png');
+                  const framedBack = await applyFrame(resultBack, '/assets/screen/screen-wardrobe-frame.png');
                   
-                  setResultImage(framedResult); 
-                  saveToHistory(framedResult);
+                  setResultImage(framedFront); 
+                  setResultImageBack(framedBack);
+                  
+                  console.log("📜 Saving both views to session history...");
+                  saveToHistory(framedFront);
+                  saveToHistory(framedBack);
+                  
                   const timestamp = Date.now();
-                  const driveData = await saveImageToDrive(framedResult, `vto-capcity-combined-${timestamp}.png`);
-                  if (driveData?.webViewLink) setShareUrl(driveData.webViewLink);
+                  console.log("💾 Starting Drive uploads for Cap City...");
+                  
+                  // Upload Front Image (This creates the folder and returns the folder URL)
+                  const frontDriveData = await saveImageToDrive(framedFront, `vto-capcity-front-${timestamp}.png`);
+                  
+                  if (frontDriveData?.webViewLink) {
+                      console.log("🔗 Received Folder URL for QR:", frontDriveData.webViewLink);
+                      setShareUrl(frontDriveData.webViewLink);
+                  } else {
+                      console.warn("⚠️ No share URL received from Drive upload");
+                  }
+                  
+                  // Upload Back Image (This joins the existing folder)
+                  saveImageToDrive(framedBack, `vto-capcity-back-${timestamp}.png`).catch(e => console.error("Error saving back image:", e));
+
               } else {
-                  throw new Error("Transformation failed.");
+                  throw new Error("One or both transformations failed.");
               }
           } else {
               // SINGLE GENERATION (Standard)
-              console.log("👕 Processing Single VTO (No analysis needed)...");
+              console.log("👕 Processing Single VTO...");
+              let finalDesignImage = designImage;
+              const attire = await analyzePersonAttire(finalHumanFront);
               
-              // Use default design image for standard VTO as per "no need analysis"
-              const result = await tryOn(finalHumanFront, designImage);
+              if (savedDesign) {
+                  if (attire.is_muslimah) {
+                      console.log("🧕 Muslimah detected - adjusting design...");
+                      const LONG_SLEEVE_CANVAS = '/assets/shirts/long-sleeve-canvas.png';
+                      finalDesignImage = await generateDesignImage(savedDesign, LONG_SLEEVE_CANVAS);
+                  } else if (attire.is_sleeveless) {
+                      console.log("👕 Sleeveless detected - adjusting design...");
+                      const STANDARD_CANVAS = '/assets/shirts/base-canvas-black-shirt.png';
+                      finalDesignImage = await generateDesignImage(savedDesign, STANDARD_CANVAS);
+                  }
+              }
+
+              const result = await tryOn(finalHumanFront, finalDesignImage);
               if (result) {
-                const framedImage = await applyFrame(result, '/assets/screen/screen-03.png', { contentScale: 1.1, offsetY: 0 });
+                console.log("🎨 VTO result: Success");
+                const framedImage = await applyFrame(result, '/assets/screen/screen-04.png');
                 setResultImage(framedImage);
                 saveToHistory(framedImage);
+                
+                console.log("💾 Starting Drive upload...");
                 const driveData = await saveImageToDrive(framedImage, `vto-design-${Date.now()}.png`);
-                if (driveData?.webViewLink) setShareUrl(driveData.webViewLink);
+                if (driveData?.webViewLink) {
+                    console.log("🔗 Received Share URL:", driveData.webViewLink);
+                    setShareUrl(driveData.webViewLink);
+                } else {
+                    console.warn("⚠️ No share URL received from Drive upload");
+                }
               } else {
+                 console.warn("⚠️ VTO result failed, showing original image");
                  setResultImage(finalHumanFront); 
               }
           }
@@ -294,7 +299,7 @@ function WizardPage() {
 
                         <div className="grid grid-cols-2 gap-6 w-full mb-4">
                             <button 
-                                onClick={() => handleShirtSelect('/assets/shirts/cap-city-front-back.png')}
+                                onClick={() => handleShirtSelect('/assets/shirts/cap-city-front.png')}
                                 className={`group relative p-8 rounded-[12px] border-4 transition-all duration-500 flex flex-col items-center gap-4 ${
                                     selectedShirt?.includes('cap-city') 
                                     ? 'border-u-orange bg-white shadow-2xl scale-[1.05]' 
@@ -341,14 +346,19 @@ function WizardPage() {
         )}
 
         {step === 2 && (
-            <div className={`w-full max-w-6xl animate-in fade-in zoom-in-95 duration-700 flex flex-col lg:flex-row items-center justify-center gap-10 py-2 px-6`}>
-                <div className="flex-1 flex flex-col items-center justify-center w-full relative text-center">
+            <div className={`w-full max-w-6xl animate-in fade-in zoom-in-95 duration-700 flex flex-col ${selectedShirt.includes('cap-city') ? 'lg:flex-row gap-10' : 'items-center gap-6'} justify-center py-2 px-6`}>
+                <div className={`${selectedShirt.includes('cap-city') ? 'flex-1' : 'flex-none'} flex flex-col items-center justify-center w-full relative text-center`}>
                     {selectedShirt.includes('cap-city') ? (
                         <div className="space-y-6 flex flex-col items-center w-full">
-                            <div className={`flex flex-col items-center justify-center transform scale-[0.6] md:scale-[0.55] lg:scale-[0.65] origin-center`}>
+                            <div className={`flex flex-col md:flex-row gap-10 items-center justify-center transform scale-[0.6] md:scale-[0.55] lg:scale-[0.65] origin-center`}>
                                 <div className="space-y-6">
                                     <div className={`relative p-2 bg-white rounded-[24px] shadow-[0_20px_60px_rgba(52,55,65,0.1)] border-2 border-tech-black/5`}>
-                                        <DesignCanvas onCanvasReady={handleCanvasReady} initialDesign={savedDesign} background="/assets/shirts/cap-city-front-back.png" />
+                                        <DesignCanvas onCanvasReady={handleCanvasReady} initialDesign={savedDesign} background="/assets/shirts/cap-city-front.png" />
+                                    </div>
+                                </div>
+                                <div className="space-y-6">
+                                    <div className={`relative p-2 bg-white rounded-[24px] shadow-[0_20px_60px_rgba(52,55,65,0.1)] border-2 border-tech-black/5`}>
+                                        <DesignCanvas background="/assets/shirts/cap-city-back.png" readOnly={true} />
                                     </div>
                                 </div>
                             </div>
@@ -369,25 +379,19 @@ function WizardPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className={`relative p-2 bg-white rounded-[24px] shadow-[0_20px_60px_rgba(52,55,65,0.1)] border-2 border-tech-black/5 transform scale-[0.7] origin-center`}>
+                        <div className={`relative p-2 bg-white rounded-[24px] shadow-[0_20px_60px_rgba(52,55,65,0.1)] border-2 border-tech-black/5 transform scale-[0.75] md:scale-[0.8] lg:scale-[0.85] origin-center -my-8`}>
                             <DesignCanvas onCanvasReady={handleCanvasReady} initialDesign={savedDesign} background={selectedShirt} />
                         </div>
                     )}
                 </div>
 
                 {!selectedShirt.includes('cap-city') && (
-                    <div className={`w-full flex flex-col gap-4 lg:w-[280px]`}>
-                        <div className="space-y-0.5">
-                            <h2 className="text-xl font-black text-tech-black tracking-tighter leading-none italic uppercase text-left">
-                                ADD SOME FLAVOUR.
-                            </h2>
-                        </div>
-
+                    <div className="w-full flex flex-col gap-4 max-w-xl">
                         <div className="bg-white p-3 rounded-[24px] shadow-sm border border-tech-black/5">
                             <Toolbar canvas={canvas} compact={true} onShirtChange={setSelectedShirt} />
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 w-full">
                             <button 
                                 onClick={() => { setSavedDesign(null); setStep(1); }} 
                                 className="p-3 bg-tech-black text-white rounded-pill hover:bg-u-orange transition-all active:scale-95 shadow-md border-2 border-white/10"
@@ -398,7 +402,7 @@ function WizardPage() {
                                 onClick={handleNextToHuman}
                                 className="flex-grow py-3 bg-tech-black text-white rounded-pill shadow-[0_10px_30px_rgba(52,55,65,0.3)] hover:bg-u-orange transition-all font-black text-xs uppercase tracking-tighter flex items-center justify-center gap-2 active:scale-95"
                             >
-                                FINALIZE VIBE <Zap size={16} fill="white" />
+                                FINALIZE DESIGN <Zap size={16} fill="white" />
                             </button>
                         </div>
                     </div>
@@ -410,7 +414,9 @@ function WizardPage() {
             <div className={`w-full flex flex-col items-center justify-center py-4`}>
                 <div className="space-y-1 mb-6 text-center">
                     <h2 className="text-5xl font-black text-tech-black tracking-tighter italic uppercase leading-tight">
-                        {showReview ? 'REVIEW YOUR LOOK' : 'STRIKE A POSE.'}
+                        {selectedShirt.includes('cap-city') 
+                            ? (showReview ? 'REVIEW YOUR POSES' : `STRIKE A POSE: ${capCityStep.toUpperCase()} VIEW`) 
+                            : 'STRIKE A POSE.'}
                     </h2>
                 </div>
                 
@@ -418,43 +424,37 @@ function WizardPage() {
                     <div className="relative p-2 bg-white rounded-[48px] shadow-2xl border-4 border-u-orange/10 w-full max-w-xl">
                         {showReview ? (
                             <div className="w-full flex flex-col gap-8 p-4">
-                                <div className="flex gap-4 justify-center">
-                                    {humanImage && (
-                                        <div className="flex-1 max-w-[240px] space-y-2">
-                                            <div className="aspect-[3/4] rounded-[24px] overflow-hidden border-2 border-tech-black/5">
-                                                <img src={humanImage} alt="Front Pose" className="w-full h-full object-cover" />
-                                            </div>
-                                            <p className="text-[10px] font-black text-tech-black/40 text-center uppercase tracking-widest">
-                                                Your Pose
-                                            </p>
+                                <div className="flex gap-4">
+                                    <div className="flex-1 space-y-2">
+                                        <div className="aspect-[3/4] rounded-[24px] overflow-hidden border-2 border-tech-black/5">
+                                            <img src={humanImage} alt="Front Pose" className="w-full h-full object-cover" />
                                         </div>
-                                    )}
-                                    {humanImageBack && (
-                                        <div className="flex-1 max-w-[240px] space-y-2">
-                                            <div className="aspect-[3/4] rounded-[24px] overflow-hidden border-2 border-tech-black/5">
-                                                <img src={humanImageBack} alt="Back Pose" className="w-full h-full object-cover" />
-                                            </div>
-                                            <p className="text-[10px] font-black text-tech-black/40 text-center uppercase tracking-widest">Back View</p>
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                        <div className="aspect-[3/4] rounded-[24px] overflow-hidden border-2 border-tech-black/5">
+                                            <img src={humanImageBack} alt="Back Pose" className="w-full h-full object-cover" />
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                                 <button 
                                     onClick={() => handleGenerate()}
                                     className="w-full py-8 bg-u-orange text-white rounded-pill font-black text-2xl uppercase tracking-tighter shadow-xl hover:bg-tech-black transition-all flex items-center justify-center gap-4 italic"
                                 >
-                                    CONFIRM & PROCESS <Zap size={32} fill="white" />
+                                    CONFIRM <Zap size={32} fill="white" />
                                 </button>
                             </div>
                         ) : (
                             <HumanInput 
                                 key={capCityStep}
                                 onImageSelect={(img) => handleGenerate(img)} 
-                                designPreview={designImage}
+                                designPreview={selectedShirt.includes('cap-city') 
+                                    ? (capCityStep === 'front' ? designImage : designImageBack) 
+                                    : designImage}
                                 compact={true}
                                 instruction={selectedShirt.includes('cap-city')
-                                    ? "Strike a pose! We'll detect if you're showing the front or back."
+                                    ? (capCityStep === 'front' ? "Capture your FRONT view pose" : "Capture your BACK view pose")
                                     : "Ensure your entire body from head to waist is visible"}
-                                actionLabel="TRY ON"
+                                actionLabel={selectedShirt.includes('cap-city') && capCityStep === 'front' ? "NEXT VIEW" : "TRY ON"}
                             />
                         )}
                     </div>
@@ -465,6 +465,9 @@ function WizardPage() {
                         onClick={() => {
                             if (showReview) {
                                 setShowReview(false);
+                                setCapCityStep('back');
+                            } else if (selectedShirt.includes('cap-city') && capCityStep === 'back') {
+                                setCapCityStep('front');
                             } else {
                                 setStep(2);
                             }
@@ -473,13 +476,12 @@ function WizardPage() {
                     >
                         <ArrowLeft size={20} /> Back
                     </button>
-                    {(humanImage || humanImageBack || showReview) && (
+                    {selectedShirt.includes('cap-city') && (capCityStep === 'back' || showReview) && (
                         <button 
                             onClick={() => {
+                                setCapCityStep('front');
                                 setHumanImage(null);
                                 setHumanImageBack(null);
-                                setDetectedOrientation(null);
-                                setCapCityStep('any');
                                 setShowReview(false);
                             }} 
                             className="px-10 py-4 bg-u-orange text-white rounded-pill font-black hover:bg-tech-black transition-all active:scale-95 flex items-center gap-3 uppercase text-base tracking-tighter shadow-xl"
@@ -497,7 +499,7 @@ function WizardPage() {
                     <div className="flex-1 flex flex-col items-center justify-center w-full">
                         <div className="relative p-6 bg-white rounded-[60px] shadow-2xl mb-12 border-4 border-u-orange/20 animate-pulse">
                             <div className={`relative overflow-hidden rounded-[12px] ${isPortraitMode ? 'w-72 h-[450px]' : 'w-80 h-96'}`}>
-                                <img src={humanImage || humanImageBack} alt="Scanning" className="w-full h-full object-cover opacity-40 grayscale" />
+                                <img src={humanImage} alt="Scanning" className="w-full h-full object-cover opacity-40 grayscale" />
                                 <div className="absolute left-0 right-0 h-2 bg-u-orange shadow-[0_0_40px_#ff7b00] z-10 animate-scan"></div>
                             </div>
                         </div>
@@ -524,15 +526,29 @@ function WizardPage() {
                             <div className="relative group max-w-4xl flex gap-6">
                                 <div className="absolute -inset-10 bg-u-orange/10 rounded-[100px] blur-3xl opacity-50 pointer-events-none"></div>
                                 
+                                {/* Front Result */}
                                 <div className="relative flex-1">
                                     {resultImage ? (
-                                        <img src={resultImage} alt="Result" className="w-full h-full object-contain rounded-[12px] shadow-2xl" />
+                                        <img src={resultImage} alt="Front Result" className="w-full h-full object-contain rounded-[12px] shadow-2xl" />
                                     ) : (
                                         <div className="w-full aspect-[3/4] flex items-center justify-center bg-soft-white/10 text-tech-black/10 rounded-[12px] border-2 border-dashed border-white/20">
                                             <ImageIcon size={64} />
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Back Result (Cap City Only) */}
+                                {selectedShirt.includes('cap-city') && (
+                                    <div className="relative flex-1">
+                                        {resultImageBack ? (
+                                            <img src={resultImageBack} alt="Back Result" className="w-full h-full object-contain rounded-[12px] shadow-2xl" />
+                                        ) : (
+                                            <div className="w-full aspect-[3/4] flex items-center justify-center bg-soft-white/10 text-tech-black/10 rounded-[12px] border-2 border-dashed border-white/20">
+                                                <ImageIcon size={64} />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Technical Sync Card */}
@@ -550,8 +566,8 @@ function WizardPage() {
                                         />
                                     ) : (
                                         <div className="flex flex-col items-center gap-2 text-tech-black/20">
-                                            <RefreshCw size={24} className="animate-spin text-tech-black" />
-                                            <span className="text-[8px] font-black uppercase tracking-widest italic">Syncing...</span>
+                                            <RefreshCw size={20} className="animate-spin text-u-orange" />
+                                            <span className="text-[7px] font-black uppercase tracking-[0.2em] italic text-center px-4">Syncing...</span>
                                         </div>
                                     )}
                                 </div>
@@ -562,17 +578,15 @@ function WizardPage() {
                             <button 
                                 onClick={() => { 
                                     setStep(1); 
-                                    setHumanImage(null);
-                                    setHumanImageBack(null);
                                     setResultImage(null); 
                                     setResultImageBack(null);
-                                    setDetectedOrientation(null);
-                                    setSelectedShirt(null); 
+                                    setSelectedShirt('/assets/shirts/base-canvas-black-shirt.png'); 
                                     setSavedDesign(null); 
-                                    setCapCityStep('any');
+                                    setCapCityStep('front');
+                                    setHumanImageBack(null);
                                     setShowReview(false);
                                 }}
-                                className="flex-grow p-8 bg-black text-white rounded-pill font-black text-4xl hover:bg-tech-black shadow-[0_30px_80px_rgba(215,63,9,0.3)] transition-all active:scale-95 uppercase tracking-tighter italic"
+                                className="flex-grow p-2 bg-black text-white rounded-pill font-black text-xl hover:bg-tech-black shadow-[0_30px_80px_rgba(215,63,9,0.3)] transition-all active:scale-95 uppercase tracking-tighter italic"
                             >
                                 NEW SESSION
                             </button>
