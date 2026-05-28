@@ -100,9 +100,14 @@ const HumanInput = ({
       context.drawImage(video, zoomedSX, zoomedSY, zoomedSW, zoomedSH, 0, 0, targetWidth, targetHeight);
       
       const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-      setCapturedImage(dataUrl);
       
+      // Stop camera first
       stopCamera();
+
+      // Submit to parent after a tiny delay to ensure this component is ready to unmount
+      setTimeout(() => {
+          onImageSelect(dataUrl);
+      }, 0);
     }
   };
 

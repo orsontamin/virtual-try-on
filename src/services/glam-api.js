@@ -44,9 +44,11 @@ export const analyzeAndConsultGlam = async (imageBase64, isRetry = false) => {
     2. Write a professional, encouraging recommendation note for the client.
     
     Guidelines for the Edit Prompt:
-    - Layout: MANDATORY - A strict 2x2 grid collage showing 4 variations.
+    - Layout: MANDATORY - A seamless 2x2 grid collage showing 4 variations with NO white borders, gaps, or lines between the panels.
     - Identity: MAINTAIN the exact original face shape, jawline, and features. DO NOT make the face slimmer.
+    - Background: MANDATORY - Use a solid, uniform, vibrant orange background (hex color #F47321) for all 4 panels. NO WHITE BACKGROUNDS.
     - Framing: Show the WHOLE FACE and FULL HEAD in every panel. DO NOT CROP.
+    - Seamlessness: MANDATORY - The 4 panels must touch each other directly with NO spacing, NO lines, and NO borders between them.
     - Variety: 4 distinct premium makeup looks.
     
     Output ONLY valid JSON in this format:

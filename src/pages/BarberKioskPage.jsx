@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Scissors, RefreshCw, Download, Zap, ClipboardList, Box, Cloud, Sparkles, BarChart3, Settings, X, Save, RotateCcw as ResetIcon, FileUp, FileDown, Wifi } from 'lucide-react';
+import { ArrowLeft, Scissors, RefreshCw, Download, Zap, ClipboardList, Box, Cloud, Sparkles, BarChart3, Settings, X, Save, RotateCcw, RotateCcw as ResetIcon, FileUp, FileDown, Wifi } from 'lucide-react';
 import HumanInput from '../components/HumanInput';
 import { analyzeAndConsult, getStoredBarberPrompt, setStoredBarberPrompt } from '../services/barber-api';
 import { saveToHistory } from '../services/history';
@@ -21,6 +21,7 @@ const BarberKioskPage = () => {
   const [step, setStep] = useState(1); // 1: Capture, 2: Loading/Result
   const [loading, setLoading] = useState(false);
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
+  const [showReview, setShowReview] = useState(false);
   const [result, setResult] = useState(null); // { image, text }
   const [originalImage, setOriginalImage] = useState(null);
   const [shareUrl, setShareUrl] = useState(null);
@@ -95,11 +96,18 @@ const BarberKioskPage = () => {
   };
 
   const handleCapture = async (img) => {
+      // Phase 1: Capture -> Review
+      if (img && !showReview) {
+          setOriginalImage(img);
+          setShowReview(true);
+          return;
+      }
+
+      // Phase 2: Confirmed -> Process
       const startTime = performance.now();
-      setStep(2);
+      setStep(2); // Go directly to loading/result
       setLoading(true);
       setError(null);
-      setOriginalImage(img);
       setProcessDuration(null);
       setShareUrl(null);
       
@@ -108,12 +116,8 @@ const BarberKioskPage = () => {
       }, 3000);
 
       try {
-          const data = await analyzeAndConsult(img);
+          const data = await analyzeAndConsult(originalImage);
           if (data && data.image) {
-              const response = await fetch(data.image);
-              const blob = await response.blob();
-              const bitmap = await createImageBitmap(blob);
-              
               const endTime = performance.now();
               const duration = ((endTime - startTime) / 1000).toFixed(2);
               setProcessDuration(duration);
@@ -121,7 +125,13 @@ const BarberKioskPage = () => {
               setResult(data);
               
               // Apply Frame to the result (scale down content to avoid logo overlap)
-              const framedImage = await applyFrame(data.image, '/assets/screen/screen-grooming-frame.png', { contentScale: 0.85 });
+              const framedImage = await applyFrame(data.image, '/assets/screen/screen-03.png', { 
+                  contentScale: 0.90,
+                  backgroundPath: '/assets/screen/orange-background.png',
+                  offsetY: -150,
+                  showGrid: false,
+                  gridColor: '#F47321'
+              });
               data.image = framedImage; // Update data.image with framed version
               
               saveToHistory(data.image);
@@ -138,6 +148,7 @@ const BarberKioskPage = () => {
       } finally {
           clearInterval(interval);
           setLoading(false);
+          setShowReview(false); // Reset review state for next time
       }
   };
 
@@ -149,20 +160,51 @@ const BarberKioskPage = () => {
             <div className="w-full h-full flex flex-col items-center justify-center py-4 px-6">
                 <div className='text-center mb-8 space-y-2'>
                     <h2 className="font-black tracking-tighter leading-tight text-tech-black italic uppercase text-5xl md:text-6xl">
-                        TAKE YOUR SEAT.
+                        {showReview ? 'REVIEW YOUR LOOK.' : 'TAKE YOUR SEAT.'}
                     </h2>
-                    <p className='text-tech-black/40 font-black uppercase tracking-[0.5em] text-[10px]'>Premium Hairstyle Transformation</p>
+                    <p className='text-tech-black/40 font-black uppercase tracking-[0.5em] text-[10px]'>
+                        {showReview ? 'Confirm your capture' : 'Premium Hairstyle Transformation'}
+                    </p>
                 </div>
                 
                 <div className="relative p-2 bg-white rounded-[48px] shadow-2xl border-4 border-u-orange/10 w-full max-w-lg mb-8">
-                    <HumanInput 
-                        onImageSelect={handleCapture} 
-                        compact={true}
-                        instruction="Ensure your face is clearly visible in the center of the frame"
-                        zoom={0.8}
-                        maxDim={768}
-                        actionLabel="STYLE NOW"
-                    />
+                    {showReview ? (
+                        <div className="w-full flex flex-col gap-8 p-4">
+                            <div className="relative rounded-[32px] overflow-hidden border-2 border-tech-black/5 aspect-[3/4]">
+                                <img src={originalImage} alt="Capture Review" className="w-full h-full object-cover" />
+                                <div className="absolute top-4 left-4 bg-tech-black text-white text-[10px] font-black uppercase px-3 py-1.5 tracking-widest rounded-pill shadow-lg">
+                                    CAPTURE
+                                </div>
+                            </div>
+                            
+                            <div className="flex gap-4">
+                                <button 
+                                    onClick={() => {
+                                        setOriginalImage(null);
+                                        setShowReview(false);
+                                    }}
+                                    className="flex-1 py-6 bg-tech-black text-white rounded-pill font-black uppercase tracking-tighter hover:bg-u-orange transition-all active:scale-95 flex items-center justify-center gap-3 text-sm shadow-md"
+                                >
+                                    <RotateCcw size={24} /> RETAKE
+                                </button>
+                                <button 
+                                    onClick={() => handleCapture()}
+                                    className="flex-[2] py-6 bg-u-orange text-white rounded-pill font-black uppercase tracking-tighter shadow-[0_20px_40px_rgba(215,63,9,0.25)] hover:bg-tech-black transition-all active:scale-95 flex items-center justify-center gap-4 text-lg italic"
+                                >
+                                    CONFIRM & STYLE <Zap size={24} fill="white" />
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <HumanInput 
+                            onImageSelect={handleCapture} 
+                            compact={true}
+                            instruction="Ensure your face is clearly visible in the center of the frame"
+                            zoom={0.8}
+                            maxDim={768}
+                            actionLabel="STYLE NOW"
+                        />
+                    )}
                 </div>
             </div>
         )}
@@ -218,26 +260,27 @@ const BarberKioskPage = () => {
                         </div>
 
                         {/* Integrated Footer Section: QR + Next Button */}
-                        <div className='w-full max-w-5xl flex flex-col gap-4 md:gap-6 mb-4 px-4 md:px-0'>
+                        <div className={`w-full max-w-5xl flex ${isPortraitMode ? 'flex-row items-stretch gap-4 px-4' : 'flex-col gap-6'} mb-4 md:px-0 -mt-10 relative z-20`}>
                             {/* Horizontal QR Banner */}
-                            <div className='bg-white p-6 md:p-10 rounded-[40px] md:rounded-[60px] border-2 border-tech-black/5 shadow-2xl flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12'>
-                                <div className='flex flex-col md:flex-row items-center gap-6 md:gap-10'>
-                                    <div className="bg-soft-white p-4 rounded-[32px] border-2 border-tech-black/5 min-w-[180px] min-h-[180px] md:min-w-[220px] md:min-h-[220px] flex items-center justify-center relative group">
+                            <div className={`bg-white rounded-[32px] md:rounded-[60px] border-2 border-tech-black/5 shadow-2xl flex items-center justify-center ${isPortraitMode ? 'flex-[1.5] p-3' : 'p-6 md:p-10 flex-col md:flex-row gap-6 md:gap-12'}`}>
+                                <div className={`flex items-center gap-4 ${isPortraitMode ? 'flex-row' : 'flex-col md:flex-row'}`}>
+                                    <div className={`bg-soft-white rounded-[20px] md:rounded-[32px] border-2 border-tech-black/5 flex items-center justify-center relative group ${isPortraitMode ? 'w-20 h-20 md:w-28 md:h-28' : 'min-w-[180px] min-h-[180px] md:min-w-[220px] md:min-h-[220px] p-4'}`}>
                                         {shareUrl ? (
                                             <img 
                                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(shareUrl)}`} 
                                                 alt="QR" 
-                                                className="w-36 h-36 md:w-48 md:h-48 mix-blend-multiply animate-in fade-in duration-500"
+                                                className={`${isPortraitMode ? 'w-16 h-16 md:w-24 md:h-24' : 'w-36 h-36 md:w-48 md:h-48'} mix-blend-multiply animate-in fade-in duration-500`}
                                             />
                                         ) : (
-                                            <div className="flex flex-col items-center gap-3 text-tech-black/20">
-                                                <RefreshCw size={24} md:size={32} className="animate-spin text-tech-black" />
-                                                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest italic">Syncing...</span>
+                                            <div className="flex flex-col items-center gap-2 text-tech-black/20">
+                                                <RefreshCw size={isPortraitMode ? 16 : 24} className="animate-spin text-tech-black" />
+                                                <span className={`${isPortraitMode ? 'text-[6px]' : 'text-[8px] md:text-[10px]'} font-black uppercase tracking-widest italic`}>Syncing...</span>
                                             </div>
                                         )}
                                     </div>
-                                    <div className="space-y-2 text-center md:text-left">
-                                        <h3 className='text-xl md:text-3xl font-black text-tech-black uppercase tracking-tighter italic leading-none'>SCAN TO DOWNLOAD YOUR LOOK</h3>
+                                    <div className={`space-y-0.5 ${isPortraitMode ? 'text-left max-w-[80px] md:max-w-none' : 'text-center md:text-left'}`}>
+                                        <h3 className={`${isPortraitMode ? 'text-[8px] md:text-sm' : 'text-xl md:text-3xl'} font-black text-tech-black uppercase tracking-tighter italic leading-tight`}>SCAN TO DOWNLOAD</h3>
+                                        {isPortraitMode && <p className="text-[6px] font-bold text-tech-black/30 uppercase tracking-[0.2em]">YOUR LOOK</p>}
                                     </div>
                                 </div>
                             </div>
@@ -249,10 +292,10 @@ const BarberKioskPage = () => {
                                     setResult(null);
                                     setOriginalImage(null);
                                 }}
-                                className='w-full py-8 md:py-12 bg-u-orange text-white rounded-pill font-black text-3xl md:text-5xl hover:bg-tech-black transition-all active:scale-95 shadow-[0_30px_80px_rgba(215,63,9,0.3)] uppercase tracking-tighter italic flex flex-col items-center justify-center gap-1 group relative overflow-hidden'
+                                className={`bg-u-orange text-white rounded-[32px] md:rounded-[60px] font-black hover:bg-tech-black transition-all active:scale-95 shadow-[0_30px_80px_rgba(215,63,9,0.3)] uppercase tracking-tighter italic flex flex-col items-center justify-center gap-1 group relative overflow-hidden ${isPortraitMode ? 'flex-1 py-4 text-lg md:text-2xl px-4' : 'w-full py-8 md:py-12 text-3xl md:text-5xl'}`}
                             >
-                                <span className='text-[8px] md:text-[10px] font-black tracking-[0.5em] text-white/60 group-hover:text-white transition-colors uppercase'>READY FOR THE NEXT GLOW UP?</span>
-                                START NEW SESSION
+                                <span className={`${isPortraitMode ? 'text-[6px]' : 'text-[8px] md:text-[10px]'} font-black tracking-[0.5em] text-white/60 group-hover:text-white transition-colors uppercase`}>READY?</span>
+                                START NEW
                             </button>
                         </div>
                     </>

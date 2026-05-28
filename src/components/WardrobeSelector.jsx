@@ -2,7 +2,7 @@ import React from 'react';
 import { Shirt } from 'lucide-react';
 
 const SHIRTS = [
-  { id: 'cap-city', name: 'Cap City Special', src: '/assets/shirts/cap-city-front.png', type: 'pre-printed' },
+  { id: 'cap-city', name: 'Cap City Special', src: '/assets/shirts/cap-city-front-back.png', type: 'pre-printed' },
   { id: 'heat-press', name: 'Heat Press', src: '/assets/shirts/base-canvas-black-shirt.png', type: 'custom' },
 ];
 

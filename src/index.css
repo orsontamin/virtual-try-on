@@ -68,7 +68,8 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  background-image: url('/assets/screen/screen-all-interface.png');
+/*  background-image: url('/assets/screen/screen-all-interface.png');*/
+  background-image: url('/assets/screen/screen-01.png');
   background-size: 100% 100%; /* Forcefully stretch to fill */
   background-repeat: no-repeat;
   background-position: center;

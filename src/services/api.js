@@ -18,7 +18,7 @@ export const analyzePersonAttire = async (imageBase64) => {
             contents: [{
                 role: "user",
                 parts: [
-                    { text: "Analyze this person's attire. Detect if they are a Muslimah (wearing a hijab) or if they are wearing sleeveless clothing (bare arms, tank top, or sleeveless shirt). Return ONLY a JSON object with boolean fields: {\"is_muslimah\": true/false, \"is_sleeveless\": true/false}" },
+                    { text: "Analyze this person's photo. 1. Detect if they are a Muslimah (wearing a hijab) or if they are wearing sleeveless clothing. 2. Detect if they are facing the camera (front), facing away from the camera (back), or if BOTH front and back views are visible in the same photo (both). Return ONLY a JSON object: {\"is_muslimah\": true/false, \"is_sleeveless\": true/false, \"orientation\": \"front\"/\"back\"/\"both\"}" },
                     { inline_data: { mime_type: 'image/png', data: cleanImage } }
                 ]
             }],

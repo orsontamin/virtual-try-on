@@ -7,6 +7,7 @@ import GlamStudioPage from './pages/GlamStudioPage';
 import BarberKioskPage from './pages/BarberKioskPage';
 import SharePage from './pages/SharePage';
 import LandingPage from './pages/LandingPage';
+import FrameStudioPage from './pages/FrameStudioPage';
 
 const ScreenLayout = ({ children }) => {
   const location = useLocation();
@@ -36,6 +37,7 @@ function App() {
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/barber-kiosk" element={<BarberKioskPage />} />
           <Route path="/glam-studio" element={<GlamStudioPage />} />
+          <Route path="/frame-studio" element={<FrameStudioPage />} />
           <Route path="/share/:id" element={<SharePage />} />
         </Routes>
       </ScreenLayout>

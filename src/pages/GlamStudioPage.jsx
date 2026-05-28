@@ -6,6 +6,7 @@ import { analyzeAndConsultGlam } from '../services/glam-api';
 import { saveToHistory } from '../services/history';
 import { saveImageToDrive } from '../services/google-drive';
 import { getAccessToken as refreshGoogleToken } from '../services/auth';
+import { applyFrame } from '../utils/image-utils';
 
 const LOADING_MESSAGES = [
     'Analyzing facial features...',
@@ -68,6 +69,17 @@ const GlamStudioPage = () => {
               setProcessDuration(duration);
 
               setResult(data);
+              
+              // Apply Frame to the result
+              const framedImage = await applyFrame(data.image, '/assets/screen/screen-03.png', { 
+                  contentScale: 0.95,
+                  backgroundPath: '/assets/screen/orange-background.png',
+                  offsetY: -150,
+                  showGrid: false,
+                  gridColor: '#F47321'
+              });
+              data.image = framedImage; 
+              
               saveToHistory(data.image);
               
               saveImageToDrive(data.image, `glam-collage-${Date.now()}.png`).then(driveData => {
@@ -195,7 +207,7 @@ const GlamStudioPage = () => {
                         </div>
 
                         {/* Prominent Next User CTA */}
-                        <div className='w-full max-w-4xl mt-12 mb-8 animate-in slide-in-from-bottom-8 duration-1000 delay-500'>
+                        <div className='w-full max-w-4xl mt-4 mb-8 animate-in slide-in-from-bottom-8 duration-1000 delay-500 -mt-10 relative z-20'>
                             <button 
                                 onClick={() => {
                                     setStep(1);

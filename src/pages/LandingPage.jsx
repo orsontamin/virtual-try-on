@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Scissors, Shirt, ArrowRight, Zap, Wifi } from 'lucide-react';
+import { Scissors, Shirt, ArrowRight } from 'lucide-react';
 
 const LandingPage = () => {
   const navigate = useNavigate();
