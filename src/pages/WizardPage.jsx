@@ -300,6 +300,30 @@ function WizardPage() {
       }
   };
 
+  const handleRetryUpload = async () => {
+    if (!resultImage || shareUrl) return;
+    
+    setLoading(true);
+    setLoadingStep(4); // "Finalizing your look..."
+    try {
+        console.log("🔄 Retrying Drive upload...");
+        const filename = selectedShirt.includes('cap-city') ? `vto-capcity-${Date.now()}.png` : `vto-design-${Date.now()}.png`;
+        const driveData = await saveImageToDrive(resultImage, filename);
+        
+        if (driveData?.webViewLink) {
+            console.log("🔗 Received Share URL on retry:", driveData.webViewLink);
+            setShareUrl(driveData.webViewLink);
+        } else {
+            setError("QR Sync failed again. Please try one more time or check connection.");
+        }
+    } catch (err) {
+        console.error("❌ Retry Upload Error:", err);
+        setError("Failed to sync QR code.");
+    } finally {
+        setLoading(false);
+    }
+  };
+
   return (
     <div className={`flex flex-col font-sans selection:bg-u-orange/20 h-full`}>
       <main className={`flex-grow flex flex-col items-center justify-center p-2 md:p-4 overflow-hidden`}>
@@ -542,9 +566,21 @@ function WizardPage() {
                                                         className="w-20 h-20 mix-blend-multiply"
                                                     />
                                                 ) : (
-                                                    <div className="flex flex-col items-center gap-2 text-tech-black/20">
-                                                        <RefreshCw size={20} className="animate-spin text-u-orange" />
-                                                        <span className="text-[7px] font-black uppercase tracking-[0.2em] italic text-center">Syncing...</span>
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        {loading ? (
+                                                            <>
+                                                                <RefreshCw size={20} className="animate-spin text-u-orange" />
+                                                                <span className="text-[7px] font-black uppercase tracking-[0.2em] italic text-center text-tech-black/20">Syncing...</span>
+                                                            </>
+                                                        ) : (
+                                                            <button 
+                                                                onClick={handleRetryUpload}
+                                                                className="flex flex-col items-center gap-2 hover:scale-105 transition-transform"
+                                                            >
+                                                                <RefreshCw size={24} className="text-u-orange" />
+                                                                <span className="text-[8px] font-black uppercase tracking-tighter text-tech-black bg-u-orange/10 px-2 py-1 rounded-full">Retry QR</span>
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
@@ -571,7 +607,7 @@ function WizardPage() {
                                     </div>
 
                                     {/* Result Display (Reduced by 20%) */}
-                                    <div className="relative group max-w-4xl scale-[0.8] origin-top">
+                                    <div className="relative group max-w-2xl scale-[0.75] origin-top">
                                         <div className="absolute -inset-10 bg-u-orange/10 rounded-[100px] blur-3xl opacity-50 pointer-events-none"></div>
                                         <div className="relative">
                                             {resultImage ? (
@@ -587,7 +623,7 @@ function WizardPage() {
                             ) : (
                                 <>
                                     {/* Result Display (Standard) */}
-                                    <div className="relative group max-w-4xl flex gap-6">
+                                    <div className="relative group max-w-2xl flex gap-6 scale-[0.8] origin-center">
                                         <div className="absolute -inset-10 bg-u-orange/10 rounded-[100px] blur-3xl opacity-50 pointer-events-none"></div>
                                         
                                         <div className="relative flex-1">
@@ -615,9 +651,21 @@ function WizardPage() {
                                                     className="w-20 h-20 mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
                                                 />
                                             ) : (
-                                                <div className="flex flex-col items-center gap-2 text-tech-black/20">
-                                                    <RefreshCw size={20} className="animate-spin text-u-orange" />
-                                                    <span className="text-[7px] font-black uppercase tracking-[0.2em] italic text-center px-4">Syncing...</span>
+                                                <div className="flex flex-col items-center gap-2">
+                                                    {loading ? (
+                                                        <>
+                                                            <RefreshCw size={20} className="animate-spin text-u-orange" />
+                                                            <span className="text-[7px] font-black uppercase tracking-[0.2em] italic text-center px-4 text-tech-black/20">Syncing...</span>
+                                                        </>
+                                                    ) : (
+                                                        <button 
+                                                            onClick={handleRetryUpload}
+                                                            className="flex flex-col items-center gap-2 hover:scale-105 transition-transform"
+                                                        >
+                                                            <RefreshCw size={24} className="text-u-orange" />
+                                                            <span className="text-[8px] font-black uppercase tracking-tighter text-tech-black bg-u-orange/10 px-2 py-1 rounded-full">Retry QR</span>
+                                                        </button>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
