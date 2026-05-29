@@ -154,7 +154,7 @@ const BarberKioskPage = () => {
 
   return (
     <div className='flex flex-col font-sans selection:bg-u-orange/20 h-full'>
-      <main className='flex-grow flex flex-col items-center justify-center p-4 md:p-8'>
+      <main className={`flex-grow flex flex-col items-center p-4 md:p-8 ${step === 2 ? 'justify-start pt-4 pb-[25vh]' : 'justify-center'}`}>
         
         {step === 1 && (
             <div className={`w-full h-full flex flex-col items-center justify-center py-4 px-6 ${isPortraitMode ? 'scale-[0.9] transform-gpu origin-center' : ''}`}>
