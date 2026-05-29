@@ -243,34 +243,28 @@ const BarberKioskPage = () => {
                             <p className="text-[10px] text-tech-black/40 font-black uppercase tracking-[0.4em]">AI Style Variations</p>
                         </div>
 
-                        {/* Result Display */}
-                        <div className='relative group rounded-[32px] md:rounded-[60px] overflow-hidden shadow-[0_40px_100px_rgba(52,55,65,0.15)] border-8 md:border-[16px] border-white bg-white w-full max-w-2xl'>
-                            <div className="absolute -inset-12 bg-u-orange/5 blur-[100px] opacity-50 pointer-events-none animate-pulse"></div>
-                            <img src={result?.image} alt='Result' className='w-full h-auto object-contain relative z-10' />
-                        </div>
-
-                        {/* Actions Section: QR + Next Button (Now directly below) */}
-                        <div className="w-full max-w-2xl flex flex-col gap-6">
+                        {/* Actions Section: QR + Next Button (Now ABOVE image) */}
+                        <div className="w-full max-w-2xl flex gap-6">
                             {/* Horizontal QR Banner */}
-                            <div className="bg-white rounded-[32px] md:rounded-[48px] border-2 border-tech-black/5 shadow-xl flex items-center justify-center p-6 w-full">
-                                <div className="flex items-center gap-6">
-                                    <div className="bg-soft-white rounded-[24px] border-2 border-tech-black/5 flex items-center justify-center relative group w-28 h-28 md:w-36 md:h-36">
+                            <div className="bg-white rounded-[32px] md:rounded-[48px] border-2 border-tech-black/5 shadow-xl flex items-center justify-center p-6 flex-1">
+                                <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
+                                    <div className="bg-soft-white rounded-[24px] border-2 border-tech-black/5 flex items-center justify-center relative group w-24 h-24 md:w-32 md:h-32 flex-shrink-0">
                                         {shareUrl ? (
                                             <img 
                                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(shareUrl)}`} 
                                                 alt="QR" 
-                                                className="w-20 h-20 md:w-28 md:h-28 mix-blend-multiply animate-in fade-in duration-500"
+                                                className="w-16 h-16 md:w-24 md:h-24 mix-blend-multiply animate-in fade-in duration-500"
                                             />
                                         ) : (
                                             <div className="flex flex-col items-center gap-2 text-tech-black/20">
-                                                <RefreshCw size={24} className="animate-spin text-tech-black" />
-                                                <span className="text-[8px] font-black uppercase tracking-widest italic">Syncing...</span>
+                                                <RefreshCw size={20} className="animate-spin text-tech-black" />
+                                                <span className="text-[7px] font-black uppercase tracking-widest italic">Syncing...</span>
                                             </div>
                                         )}
                                     </div>
-                                    <div className="space-y-1">
-                                        <h3 className="text-xl md:text-2xl font-black text-tech-black uppercase tracking-tighter italic leading-tight">SCAN TO DOWNLOAD</h3>
-                                        <p className="text-[10px] font-bold text-tech-black/30 uppercase tracking-[0.2em]">YOUR NEW LOOK</p>
+                                    <div className="space-y-0.5">
+                                        <h3 className="text-base md:text-xl font-black text-tech-black uppercase tracking-tighter italic leading-tight">SCAN TO DOWNLOAD</h3>
+                                        <p className="text-[8px] font-bold text-tech-black/30 uppercase tracking-[0.2em]">YOUR NEW LOOK</p>
                                     </div>
                                 </div>
                             </div>
@@ -282,11 +276,17 @@ const BarberKioskPage = () => {
                                     setResult(null);
                                     setOriginalImage(null);
                                 }}
-                                className="bg-u-orange text-white rounded-[32px] md:rounded-[48px] font-black hover:bg-tech-black transition-all active:scale-95 shadow-lg uppercase tracking-tighter italic flex flex-col items-center justify-center gap-1 group relative overflow-hidden w-full py-8 md:py-10 text-3xl"
+                                className="bg-u-orange text-white rounded-[32px] md:rounded-[48px] font-black hover:bg-tech-black transition-all active:scale-95 shadow-lg uppercase tracking-tighter italic flex flex-col items-center justify-center gap-1 group relative overflow-hidden flex-1 py-6 md:py-8 text-2xl"
                             >
-                                <span className="text-[10px] font-black tracking-[0.5em] text-white/60 group-hover:text-white transition-colors uppercase">READY?</span>
+                                <span className="text-[8px] font-black tracking-[0.5em] text-white/60 group-hover:text-white transition-colors uppercase">READY?</span>
                                 START NEW
                             </button>
+                        </div>
+
+                        {/* Result Display (Now BELOW actions) */}
+                        <div className='relative group rounded-[32px] md:rounded-[60px] overflow-hidden shadow-[0_40px_100px_rgba(52,55,65,0.15)] border-8 md:border-[16px] border-white bg-white w-full max-w-md'>
+                            <div className="absolute -inset-12 bg-u-orange/5 blur-[100px] opacity-50 pointer-events-none animate-pulse"></div>
+                            <img src={result?.image} alt='Result' className='w-full h-auto object-contain relative z-10' />
                         </div>
                     </div>
                 )}
