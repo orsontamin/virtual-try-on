@@ -45,6 +45,8 @@ const DEFAULT_BARBER_PROMPT = barberConfig?.master_prompt || `Analyze the PRIMAR
     3. Generate a prompt describing a 2x2 collage of these styles.
     4. Write a professional recommendation note for the client.
     
+    EYEWEAR MANDATE: If the user is wearing spectacles or sunglasses (whether on the face or pushed up on the head), DO NOT remove them. Maintain their EXACT placement as seen in the original photo in every panel. If they are pushed up on the head to expose the eyes, keep them in that exact position. Never remove them.
+    
     Output ONLY valid JSON in this format:
     {
       "edit_prompt": "the technical prompt here...",
