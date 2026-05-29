@@ -244,13 +244,13 @@ const BarberKioskPage = () => {
                         </div>
 
                         {/* Result Display */}
-                        <div className='relative group rounded-[32px] md:rounded-[60px] overflow-hidden shadow-[0_40px_100px_rgba(52,55,65,0.15)] border-8 md:border-[16px] border-white bg-white w-full max-w-3xl'>
+                        <div className='relative group rounded-[32px] md:rounded-[60px] overflow-hidden shadow-[0_40px_100px_rgba(52,55,65,0.15)] border-8 md:border-[16px] border-white bg-white w-full max-w-2xl'>
                             <div className="absolute -inset-12 bg-u-orange/5 blur-[100px] opacity-50 pointer-events-none animate-pulse"></div>
                             <img src={result?.image} alt='Result' className='w-full h-auto object-contain relative z-10' />
                         </div>
 
                         {/* Actions Section: QR + Next Button (Now directly below) */}
-                        <div className="w-full max-w-3xl flex flex-col gap-6">
+                        <div className="w-full max-w-2xl flex flex-col gap-6">
                             {/* Horizontal QR Banner */}
                             <div className="bg-white rounded-[32px] md:rounded-[48px] border-2 border-tech-black/5 shadow-xl flex items-center justify-center p-6 w-full">
                                 <div className="flex items-center gap-6">
